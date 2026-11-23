@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <bool name="use_test_ads">false</bool>
+    <string name="admob_app_id">ca-app-pub-1345063149639557~9613308627</string>
+    <string name="admob_banner_id">ca-app-pub-1345063149639557/1736099863</string>
+    <string name="admob_interstitial_id">ca-app-pub-1345063149639557/9583508131</string>
+    <string name="admob_test_banner_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="admob_test_interstitial_id">ca-app-pub-3940256099942544/1033173712</string>
     <string name="app_name">Flip Card Hero</string>
     <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
         <item name="android:windowBackground">#0f172a</item>

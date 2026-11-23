@@ -1,7 +1,0 @@
-com.flipcardhero.game.app-pngs-0 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/generated/res/pngs/debug
-com.flipcardhero.game.app-resValues-1 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/generated/res/resValues/debug
-com.flipcardhero.game.app-packageDebugResources-2 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
-com.flipcardhero.game.app-packageDebugResources-3 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
-com.flipcardhero.game.app-merged_res-4 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/merged_res/debug
-com.flipcardhero.game.app-debug-5 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/src/debug/res
-com.flipcardhero.game.app-main-6 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/src/main/res

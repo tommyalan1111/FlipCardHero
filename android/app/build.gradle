@@ -4,19 +4,19 @@ plugins {
 
 android {
     namespace 'com.flipcardhero.game'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.flipcardhero.game"
         minSdk 24
-        targetSdk 34
-        versionCode 1
-        versionName "1.0.0"
+        targetSdk 35
+        versionCode 2
+        versionName "1.0.1"
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     buildTypes {
@@ -27,8 +27,16 @@ android {
     }
 }
 
+configurations.configureEach {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        // Ép dùng annotation đồng nhất để tránh xung đột sau khi resolve
+        if (details.requested.group == 'androidx.annotation' && details.requested.name == 'annotation') {
+            details.useVersion '1.9.1'
+        }
+    }
+}
+
 dependencies {
-    // AndroidX & Google Mobile Ads (AdMob)
-    implementation 'androidx.annotation:annotation:1.7.1'
-    implementation 'com.google.android.gms:play-services-ads:23.0.0'
+    // Google Mobile Ads (AdMob)
+    implementation 'com.google.android.gms:play-services-ads:23.6.0'
 }
