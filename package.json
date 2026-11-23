@@ -1,0 +1,23 @@
+{
+  "name": "flip-card-hero",
+  "version": "1.0.0",
+  "description": "Game đập bài tuổi thơ - Flip Card Hero cho Mobile & Android",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "android:init": "npx @capacitor/cli init",
+    "android:add": "npx @capacitor/cli add android",
+    "android:open": "npx @capacitor/cli open android",
+    "android:sync": "npx @capacitor/cli sync"
+  },
+  "keywords": [
+    "card-game",
+    "slap-card",
+    "ddakji",
+    "menko",
+    "mobile-game",
+    "android"
+  ],
+  "author": "",
+  "license": "MIT"
+}
