@@ -7,6 +7,18 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!--
+        KHAI BÁO PHẦN CỨNG KHÔNG BẮT BUỘC
+        Activity đang khoá dọc (android:screenOrientation="portrait"). Nếu không khai báo
+        dưới đây, Google Play tự suy ra app YÊU CẦU phần cứng android.hardware.screen.portrait,
+        khiến app không hiển thị cho người dùng PC, Chromebook, Android XR hoặc tablet không
+        khai báo feature này.
+        Game chạy trong WebView, tự co giãn theo màn hình nên không cần feature này là bắt buộc.
+    -->
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

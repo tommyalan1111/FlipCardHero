@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=512, initial-scale=1">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 512px; height: 512px;
+    overflow: hidden;
+    background: transparent;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  .stage {
+    position: relative;
+    width: 512px; height: 512px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Toàn bộ phần "art" thu nhỏ 0.7 để nằm gọn trong vùng an toàn 66dp
+     của adaptive icon (108dp canvas). Nền do lớp background đảm nhiệm. */
+  .art {
+    position: relative;
+    width: 512px; height: 512px;
+    transform: scale(0.70);
+  }
+
+  .glow {
+    position: absolute;
+    width: 430px; height: 430px;
+    left: 41px; top: 58px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.9) 0%, rgba(249, 115, 22, 0.5) 38%, rgba(249, 115, 22, 0) 68%);
+    filter: blur(6px);
+  }
+
+  .burst {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 470px; height: 470px;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(160deg, #fef08a 0%, #facc15 42%, #f97316 100%);
+    clip-path: polygon(
+      50% 0%, 57% 17%, 70% 5%, 71% 25%, 88% 17%, 82% 35%, 100% 39%, 88% 50%,
+      100% 61%, 82% 65%, 88% 83%, 71% 75%, 70% 95%, 57% 83%, 50% 100%, 43% 83%,
+      30% 95%, 29% 75%, 12% 83%, 18% 65%, 0% 61%, 12% 50%, 0% 39%, 18% 35%,
+      12% 17%, 29% 25%, 30% 5%, 43% 17%
+    );
+    opacity: 0.95;
+  }
+
+  .burst-inner {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 380px; height: 380px;
+    transform: translate(-50%, -50%) rotate(6deg);
+    background: radial-gradient(circle at 50% 45%, #fff7ed 0%, #fde68a 45%, #fbbf24 100%);
+    clip-path: polygon(
+      50% 0%, 58% 18%, 72% 6%, 72% 27%, 90% 20%, 83% 37%, 100% 43%, 87% 51%,
+      100% 60%, 83% 64%, 90% 82%, 72% 74%, 72% 95%, 58% 83%, 50% 100%, 42% 83%,
+      28% 95%, 28% 74%, 10% 82%, 17% 64%, 0% 60%, 13% 51%, 0% 43%, 17% 37%,
+      10% 20%, 28% 27%, 28% 6%, 42% 18%
+    );
+  }
+
+  .card {
+    position: absolute;
+    display: block;
+    filter: drop-shadow(0 26px 30px rgba(2, 20, 40, 0.55));
+  }
+
+  .card-back {
+    width: 250px; height: 350px;
+    left: 46px; top: 104px;
+    transform: rotate(-19deg);
+  }
+
+  .card-front {
+    width: 268px; height: 375px;
+    left: 176px; top: 74px;
+    transform: rotate(11deg);
+  }
+
+  .sheen {
+    position: absolute;
+    left: 196px; top: 86px;
+    width: 232px; height: 350px;
+    transform: rotate(11deg);
+    border-radius: 16px;
+    background: linear-gradient(115deg, rgba(255,255,255,0) 32%, rgba(255,255,255,0.55) 46%, rgba(255,255,255,0) 58%);
+    mix-blend-mode: screen;
+  }
+
+  .spark { position: absolute; color: #fff; text-shadow: 0 0 24px rgba(255,255,255,0.9); line-height: 1; }
+  .s1 { left: 58px; top: 78px; font-size: 46px; transform: rotate(-15deg) scale(0.9); }
+  .s2 { right: 52px; bottom: 92px; font-size: 34px; transform: rotate(12deg); }
+  .s3 { left: 92px; bottom: 58px; font-size: 26px; opacity: 0.9; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="art">
+      <div class="glow"></div>
+      <div class="burst"></div>
+      <div class="burst-inner"></div>
+      <img class="card card-back" src="../../icons/card-back.svg" alt="">
+      <img class="card card-front" src="../../icons/card-front.svg" alt="">
+      <div class="sheen"></div>
+      <div class="spark s1">✦</div>
+      <div class="spark s2">✦</div>
+      <div class="spark s3">✧</div>
+    </div>
+  </div>
+</body>
+</html>

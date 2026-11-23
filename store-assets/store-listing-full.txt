@@ -1,0 +1,34 @@
+FLIP CARD HERO – VUA ĐẬP BÀI
+
+Ngày xưa đi học, ai cũng từng gấp một chiếc bài giấy rồi đập xuống sàn để lật bài của đối thủ. Flip Card Hero đưa trò chơi tuổi thơ đó lên điện thoại: vẫn là cảm giác canh nhịp, vẫn là cú đập giòn tan, nhưng đối thủ lần này là Robo Titan — một chú bot lạnh lùng không biết run tay.
+
+Không cần mạng. Không cần tài khoản. Mở lên là đập.
+
+CÁCH CHƠI
+
+• Mỗi bên 10 lá bài, trận đấu tối đa 5 hiệp.
+• Hiệp 1: oẳn tù tì để quyết định ai được đập trước.
+• Hiệp 2 đến 5: người thắng hiệp trước được chọn mức cược 2–5 lá và tiếp tục được đập trước.
+• Bài cược úp xuống sàn. Con trỏ chạy qua lại trên thanh lực, cược càng nhiều thì con trỏ càng nhanh.
+• Canh đúng vạch vàng rồi bấm ĐẬP: bài lật ngửa, bạn ăn trọn cả mâm.
+• Đập hụt: bài chỉ rung nhẹ, lượt chuyển ngay sang đối thủ.
+• Ai hết bài trước khi hết 5 hiệp thì thua ngay. Hết 5 hiệp, bên nhiều bài hơn thắng.
+
+VÌ SAO ĐÁNG CHƠI
+
+• Vùng vàng chỉ rộng 5% thanh lực. Đó là toàn bộ thử thách, và cũng là toàn bộ phần thưởng.
+• Đập hụt không phải mất lượt đơn giản — đối thủ có thể lật ngược cả ván chỉ sau một nhịp.
+• Hiệu ứng lật bài 3D, rung máy và âm thanh đập bài giòn tan.
+• Ván đấu 2–3 phút, hợp để giết thời gian một cách tử tế.
+• Chơi offline hoàn toàn, không cần đăng ký tài khoản. Biệt danh chỉ lưu trên chính thiết bị của bạn.
+• Miễn phí, có quảng cáo để duy trì game.
+
+MẸO CHO NGƯỜI MỚI
+
+Đừng đập ngay khi con trỏ vừa chạm vạch vàng — hãy canh nhịp đều rồi bấm sớm hơn một chút, vì con trỏ vẫn đang chạy trong lúc ngón tay bạn hạ xuống. Ai hiểu điều này sẽ thắng nhiều hơn ai đập theo phản xạ.
+
+DÀNH CHO AI
+
+Người thích game phản xạ và những trò chơi ngắn; người muốn tìm lại cảm giác đập bài tuổi thơ; người thích thử thách bản thân với một vùng trúng chỉ rộng 5%.
+
+Tải Flip Card Hero và xem bạn có đập trúng ngay nhịp đầu tiên không.

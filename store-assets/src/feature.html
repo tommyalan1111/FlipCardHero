@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024, initial-scale=1">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1024px; height: 500px; overflow: hidden; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  .fg {
+    position: relative;
+    width: 1024px;
+    height: 500px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 150% at 76% 32%, #1d4ed8 0%, #0c4a6e 46%, #082f49 100%);
+  }
+
+  .rays {
+    position: absolute;
+    inset: -30%;
+    background: repeating-linear-gradient(
+      105deg,
+      rgba(56, 189, 248, 0.16) 0px 2px,
+      rgba(56, 189, 248, 0) 2px 46px
+    );
+  }
+
+  .halo {
+    position: absolute;
+    width: 640px;
+    height: 640px;
+    right: -110px;
+    top: -90px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.42) 0%, rgba(56, 189, 248, 0) 66%);
+  }
+
+  .halo2 {
+    position: absolute;
+    width: 470px;
+    height: 470px;
+    left: -150px;
+    bottom: -200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.2) 0%, rgba(250, 204, 21, 0) 68%);
+  }
+
+  .copy {
+    position: absolute;
+    left: 64px;
+    top: 58px;
+    width: 566px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 15px 8px;
+    border-radius: 999px;
+    background: rgba(250, 204, 21, 0.16);
+    border: 1.5px solid rgba(250, 204, 21, 0.7);
+    color: #fde68a;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .title { margin-top: 16px; font-weight: 900; color: #fff; }
+
+  .title .row1 {
+    font-size: 80px;
+    line-height: 0.94;
+    letter-spacing: -2.5px;
+    text-shadow: 0 6px 0 rgba(2, 20, 40, 0.4), 0 16px 34px rgba(0, 0, 0, 0.45);
+  }
+  .title .row1 .y { color: #facc15; }
+
+  .title .row2 {
+    margin-top: 2px;
+    font-size: 92px;
+    line-height: 0.9;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 5px 0 #c2410c, 0 8px 0 rgba(2, 20, 40, 0.5), 0 20px 36px rgba(0, 0, 0, 0.45);
+  }
+
+  .sub {
+    margin-top: 22px;
+    font-size: 21px;
+    font-weight: 600;
+    color: #e0f2fe;
+    line-height: 1.35;
+    max-width: 500px;
+  }
+  .sub b { color: #facc15; }
+
+  .chips { margin-top: 22px; display: flex; gap: 10px; }
+  .chip {
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .phone-glow {
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    right: 10px;
+    top: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(125, 211, 252, 0.35) 0%, rgba(125, 211, 252, 0) 65%);
+  }
+
+  .float-card {
+    position: absolute;
+    right: 306px;
+    bottom: -4px;
+    width: 112px;
+    height: 157px;
+    transform: rotate(-17deg);
+    filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.55));
+  }
+
+  .phone-wrap {
+    position: absolute;
+    right: 84px;
+    top: 22px;
+    width: 254px;
+    height: 458px;
+    transform: rotate(-6deg);
+    filter: drop-shadow(0 32px 48px rgba(0, 0, 0, 0.6));
+    z-index: 2;
+  }
+
+  .phone {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 7px;
+    border-radius: 32px;
+    background: linear-gradient(165deg, #cbd5e1 0%, #1e293b 22%, #0f172a 72%, #64748b 100%);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+  }
+
+  .screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 26px;
+    overflow: hidden;
+    background: #0c4a6e;
+  }
+
+  .screen img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .notch {
+    position: absolute;
+    top: 13px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 76px;
+    height: 16px;
+    border-radius: 999px;
+    background: #020617;
+    z-index: 3;
+  }
+
+  .sparks .sp { position: absolute; color: #fff7ed; opacity: 0.85; }
+  .sp1 { left: 600px; top: 74px; font-size: 24px; }
+  .sp2 { left: 646px; bottom: 70px; font-size: 17px; }
+  .sp3 { right: 44px; bottom: 30px; font-size: 20px; }
+  .sp4 { right: 30px; top: 150px; font-size: 26px; }
+</style>
+</head>
+<body>
+  <div class="fg">
+    <div class="rays"></div>
+    <div class="halo"></div>
+    <div class="halo2"></div>
+
+    <div class="copy">
+      <div class="eyebrow">⭐ Vua đập bài tuổi thơ</div>
+      <h1 class="title">
+        <span class="row1">FLIP <span class="y">CARD</span></span>
+        <span class="row2">HERO</span>
+      </h1>
+      <p class="sub">Canh đúng vạch vàng, <b>ĐẬP</b> một cú và hốt trọn cả mâm bài!</p>
+      <div class="chips">
+        <span class="chip">⚡ Miễn phí</span>
+        <span class="chip">📴 Chơi offline</span>
+        <span class="chip">🤖 Đấu với Robo</span>
+      </div>
+    </div>
+
+    <div class="phone-glow"></div>
+    <img class="float-card" src="../../icons/card-back.svg" alt="">
+    <div class="sparks">
+      <span class="sp sp1">✦</span>
+      <span class="sp sp2">✦</span>
+      <span class="sp sp3">✧</span>
+      <span class="sp sp4">✦</span>
+    </div>
+
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <img src="../screenshots/phone-06-win.png" alt="">
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

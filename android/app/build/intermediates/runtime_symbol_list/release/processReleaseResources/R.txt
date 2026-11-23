@@ -215,6 +215,8 @@ int layout notification_template_part_chronometer 0x7f080008
 int layout notification_template_part_time 0x7f080009
 int layout offline_ads_dialog 0x7f08000a
 int mipmap ic_launcher 0x7f090000
+int mipmap ic_launcher_background 0x7f090001
+int mipmap ic_launcher_foreground 0x7f090002
 int string admob_app_id 0x7f0a0000
 int string admob_banner_id 0x7f0a0001
 int string admob_interstitial_id 0x7f0a0002
