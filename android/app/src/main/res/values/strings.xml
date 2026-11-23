@@ -1,4 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Flip Card Hero</string>
+
+    <!-- 
+        ============================================================
+        CẤU HÌNH GOOGLE ADMOB (FLIP CARD HERO)
+        Publisher ID: pub-1345063149639557
+        ============================================================
+        LƯU Ý: AdMob App ID (APPLICATION_ID) có định dạng:
+        ca-app-pub-1345063149639557~XXXXXXXXXX (có ký tự ngã ~ và dãy số ID ứng dụng).
+        Bạn hãy vào AdMob Console -> Apps -> App Settings để lấy App ID này và thay vào bên dưới.
+        Nếu chưa có, bạn có thể để tạm ID test của Google (ca-app-pub-3940256099942544~3347511713)
+        để ứng dụng không bị crash khi chạy thử.
+    -->
+    <string name="admob_app_id">ca-app-pub-1345063149639557~9613308627</string>
+
+    <!-- Mã đơn vị quảng cáo Banner (mép dưới toàn bộ màn hình) -->
+    <string name="admob_banner_id">ca-app-pub-1345063149639557/1736099863</string>
+
+    <!-- Mã đơn vị quảng cáo Interstitial (sau khi có kết quả thắng/thua mỗi màn game) -->
+    <string name="admob_interstitial_id">ca-app-pub-1345063149639557/9583508131</string>
+
+    <!-- Mã Test AdMob chính thức của Google (Dùng khi chạy thử nghiệm trên máy ảo hoặc thiết bị dev) -->
+    <string name="admob_test_banner_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="admob_test_interstitial_id">ca-app-pub-3940256099942544/1033173712</string>
+
+    <!-- Đặt true nếu muốn dùng ID test để kiểm tra hoạt động quảng cáo; false để dùng ID thật đã cung cấp -->
+    <bool name="use_test_ads">false</bool>
 </resources>

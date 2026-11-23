@@ -62,9 +62,22 @@ Dự án đã có sẵn thư mục mã nguồn Android Native WebView tại thư
 4. Để xuất file APK cài đặt: Vào menu **Build** -> **Build Bundle(s) / APK(s)** -> **Build APK(s)**.
 
 > **Mẹo:** Mỗi khi bạn chỉnh sửa code HTML/CSS/JS ở thư mục gốc, chỉ cần chạy lệnh sau để cập nhật ngay vào Android app:
-> ```bash
-> ./sync_assets.sh
-> ```
+> - Trên Windows: Click đúp vào `sync_assets.bat` hoặc chạy `.\sync_assets.ps1`
+> - Trên Linux / macOS: Chạy `./sync_assets.sh`
+
+### 📢 CẤU HÌNH QUẢNG CÁO GOOGLE ADMOB
+Dự án đã tích hợp hoàn chỉnh Google Mobile Ads SDK (AdMob) trên Android và cầu nối JavaScript Bridge:
+- **Banner Ad:** Hiển thị tự động ở mép dưới của tất cả màn hình game (không che lấp nút bấm).
+  - Ad Unit ID: `ca-app-pub-1345063149639557/1736099863`
+- **Interstitial Ad:** Tự động kích hoạt hiển thị toàn màn hình sau khi có kết quả ván đấu (Thắng hoặc Thua).
+  - Ad Unit ID: `ca-app-pub-1345063149639557/9583508131`
+- **Publisher ID:** `pub-1345063149639557`
+
+> **Lưu ý về AdMob App ID:**
+> Để ứng dụng hoạt động chính thức trên tài khoản AdMob của bạn:
+> 1. Mở file `android/app/src/main/res/values/strings.xml`.
+> 2. Thay `admob_app_id` bằng **App ID** từ AdMob Console (dạng `ca-app-pub-1345063149639557~XXXXXXXXXX`, có dấu ngã `~`).
+> 3. Trong quá trình phát triển & test thử nghiệm, bạn có thể chuyển `<bool name="use_test_ads">true</bool>` để dùng ID test an toàn của Google, tránh bị AdMob khoá tài khoản vì nhấp quảng cáo thật của mình. Khi chuẩn bị phát hành lên Google Play, đổi lại thành `false`.
 
 ### Phương án 2: Cài đặt dạng PWA (Không cần build APK)
 1. Đưa web lên bất kỳ hosting miễn phí nào (như Vercel, Netlify, GitHub Pages).

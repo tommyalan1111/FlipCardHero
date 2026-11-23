@@ -2,21 +2,45 @@ package com.flipcardhero.game;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.RelativeLayout;
+
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
 public class MainActivity extends Activity {
-    private static final String TAG = "FlipCardHero";
+    private static final String TAG = "FlipCardHero_AdMob";
+
     private WebView webView;
+    private AdView adView;
+    private InterstitialAd mInterstitialAd;
+    private boolean isInterstitialLoading = false;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -24,12 +48,43 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         try {
-            // Keep screen on during gameplay
+            // Giữ màn hình luôn sáng trong suốt trận đấu
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-            webView = new WebView(this);
-            setContentView(webView);
+            // Tạo layout chứa WebView và Banner AdMob ở mép dưới
+            RelativeLayout rootLayout = new RelativeLayout(this);
+            rootLayout.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            ));
+            rootLayout.setBackgroundColor(Color.parseColor("#0f172a"));
 
+            // 1. Khởi tạo Banner AdView
+            adView = new AdView(this);
+            adView.setId(View.generateViewId());
+            adView.setBackgroundColor(Color.parseColor("#0f172a"));
+            adView.setAdUnitId(getBannerAdUnitId());
+            adView.setAdSize(getAdaptiveBannerSize());
+
+            RelativeLayout.LayoutParams adParams = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+            );
+            adParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+            adParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+            adView.setLayoutParams(adParams);
+
+            // 2. Khởi tạo WebView chứa game HTML5
+            webView = new WebView(this);
+            RelativeLayout.LayoutParams webParams = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT
+            );
+            webParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+            webParams.addRule(RelativeLayout.ABOVE, adView.getId());
+            webView.setLayoutParams(webParams);
+
+            // Cấu hình WebView
             WebSettings settings = webView.getSettings();
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
@@ -40,16 +95,28 @@ public class MainActivity extends Activity {
             settings.setMediaPlaybackRequiresUserGesture(false);
             settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-            // Enable Hardware Acceleration for smooth animations
+            // Bật tăng tốc phần cứng cho đồ họa & chuyển động 3D lật bài
             webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-
             webView.setWebViewClient(new WebViewClient());
             webView.setWebChromeClient(new WebChromeClient());
 
-            // Load game assets safely
+            // Đăng ký Javascript Bridge để mã Web tương tác với AdMob
+            WebAppInterface bridge = new WebAppInterface();
+            webView.addJavascriptInterface(bridge, "AndroidAds");
+            webView.addJavascriptInterface(bridge, "AdMobBridge");
+
+            // Tải giao diện game từ assets
             webView.loadUrl("file:///android_asset/www/index.html");
 
-            // Safely post immersive fullscreen after view is attached
+            // Gắn view vào màn hình
+            rootLayout.addView(webView);
+            rootLayout.addView(adView);
+            setContentView(rootLayout);
+
+            // 3. Khởi tạo Google Mobile Ads SDK
+            initAdMob();
+
+            // Ẩn thanh điều hướng và trạng thái (Full Immersive Fullscreen)
             getWindow().getDecorView().post(new Runnable() {
                 @Override
                 public void run() {
@@ -58,7 +125,196 @@ public class MainActivity extends Activity {
             });
 
         } catch (Throwable t) {
-            Log.e(TAG, "Error in onCreate", t);
+            Log.e(TAG, "Lỗi trong onCreate MainActivity", t);
+        }
+    }
+
+    /**
+     * Khởi tạo AdMob SDK, tải Banner và tải trước Interstitial Ad
+     */
+    private void initAdMob() {
+        try {
+            MobileAds.initialize(this, new OnInitializationCompleteListener() {
+                @Override
+                public void onInitializationComplete(@NonNull InitializationStatus initializationStatus) {
+                    Log.i(TAG, "AdMob SDK đã khởi tạo thành công");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            loadBannerAd();
+                            loadInterstitialAd();
+                        }
+                    });
+                }
+            });
+        } catch (Throwable t) {
+            Log.e(TAG, "Không thể khởi tạo AdMob SDK", t);
+        }
+    }
+
+    /**
+     * Tải Banner Ad
+     */
+    private void loadBannerAd() {
+        try {
+            if (adView == null) return;
+
+            adView.setAdListener(new AdListener() {
+                @Override
+                public void onAdLoaded() {
+                    Log.i(TAG, "Banner AdMob đã tải thành công");
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                    Log.w(TAG, "Banner AdMob tải thất bại: " + loadAdError.getMessage() + " (Code: " + loadAdError.getCode() + ")");
+                }
+            });
+
+            AdRequest adRequest = new AdRequest.Builder().build();
+            adView.loadAd(adRequest);
+        } catch (Throwable t) {
+            Log.e(TAG, "Lỗi khi gọi loadBannerAd", t);
+        }
+    }
+
+    /**
+     * Tải trước Interstitial Ad (Quảng cáo toàn màn hình)
+     */
+    private void loadInterstitialAd() {
+        if (mInterstitialAd != null || isInterstitialLoading) {
+            return;
+        }
+
+        try {
+            isInterstitialLoading = true;
+            AdRequest adRequest = new AdRequest.Builder().build();
+            String adUnitId = getInterstitialAdUnitId();
+
+            InterstitialAd.load(this, adUnitId, adRequest, new InterstitialAdLoadCallback() {
+                @Override
+                public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                    mInterstitialAd = interstitialAd;
+                    isInterstitialLoading = false;
+                    Log.i(TAG, "Interstitial AdMob đã tải xong và sẵn sàng hiển thị");
+
+                    mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                        @Override
+                        public void onAdDismissedFullScreenContent() {
+                            Log.i(TAG, "Người dùng đã đóng quảng cáo Interstitial");
+                            mInterstitialAd = null;
+                            safeHideSystemUI();
+                            // Tải trước lượt quảng cáo tiếp theo cho ván sau
+                            loadInterstitialAd();
+                        }
+
+                        @Override
+                        public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                            Log.e(TAG, "Không thể hiển thị Interstitial: " + adError.getMessage());
+                            mInterstitialAd = null;
+                            safeHideSystemUI();
+                            loadInterstitialAd();
+                        }
+
+                        @Override
+                        public void onAdShowedFullScreenContent() {
+                            Log.i(TAG, "Interstitial AdMob đang hiển thị toàn màn hình");
+                        }
+                    });
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                    Log.w(TAG, "Interstitial tải thất bại: " + loadAdError.getMessage() + " (Code: " + loadAdError.getCode() + ")");
+                    mInterstitialAd = null;
+                    isInterstitialLoading = false;
+                }
+            });
+        } catch (Throwable t) {
+            Log.e(TAG, "Lỗi khi gọi loadInterstitialAd", t);
+            isInterstitialLoading = false;
+        }
+    }
+
+    /**
+     * Hiển thị Interstitial Ad nếu đã sẵn sàng
+     */
+    public void showInterstitialAd() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mInterstitialAd != null) {
+                    Log.i(TAG, "Bắt đầu hiển thị Interstitial AdMob...");
+                    mInterstitialAd.show(MainActivity.this);
+                } else {
+                    Log.w(TAG, "Interstitial chưa sẵn sàng. Đang tải lại...");
+                    loadInterstitialAd();
+                }
+            }
+        });
+    }
+
+    /**
+     * Tính toán kích thước Adaptive Banner phù hợp với độ rộng màn hình
+     */
+    private AdSize getAdaptiveBannerSize() {
+        try {
+            DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+            int adWidthPixels = displayMetrics.widthPixels;
+            int adWidth = (int) (adWidthPixels / displayMetrics.density);
+            return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth);
+        } catch (Throwable t) {
+            return AdSize.BANNER;
+        }
+    }
+
+    private String getBannerAdUnitId() {
+        boolean useTest = getResources().getBoolean(R.bool.use_test_ads);
+        return useTest ? getString(R.string.admob_test_banner_id) : getString(R.string.admob_banner_id);
+    }
+
+    private String getInterstitialAdUnitId() {
+        boolean useTest = getResources().getBoolean(R.bool.use_test_ads);
+        return useTest ? getString(R.string.admob_test_interstitial_id) : getString(R.string.admob_interstitial_id);
+    }
+
+    /**
+     * Cầu nối JavaScript Interface để gọi từ frontend
+     */
+    public class WebAppInterface {
+        @JavascriptInterface
+        public void showInterstitial() {
+            Log.d(TAG, "Gọi showInterstitial() từ mã JavaScript");
+            showInterstitialAd();
+        }
+
+        @JavascriptInterface
+        public boolean isInterstitialReady() {
+            return mInterstitialAd != null;
+        }
+
+        @JavascriptInterface
+        public void showBanner() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (adView != null) {
+                        adView.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void hideBanner() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (adView != null) {
+                        adView.setVisibility(View.GONE);
+                    }
+                }
+            });
         }
     }
 
@@ -81,7 +337,7 @@ public class MainActivity extends Activity {
                 );
             }
         } catch (Throwable t) {
-            Log.w(TAG, "Error hiding system UI", t);
+            Log.w(TAG, "Lỗi ẩn System UI", t);
         }
     }
 
@@ -112,6 +368,9 @@ public class MainActivity extends Activity {
         if (webView != null) {
             webView.onResume();
         }
+        if (adView != null) {
+            adView.resume();
+        }
         safeHideSystemUI();
     }
 
@@ -121,10 +380,16 @@ public class MainActivity extends Activity {
         if (webView != null) {
             webView.onPause();
         }
+        if (adView != null) {
+            adView.pause();
+        }
     }
 
     @Override
     protected void onDestroy() {
+        if (adView != null) {
+            adView.destroy();
+        }
         if (webView != null) {
             webView.destroy();
         }

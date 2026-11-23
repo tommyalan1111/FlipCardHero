@@ -927,6 +927,16 @@ class FlipCardGame {
         } else if (!isDraw) {
             window.soundManager.playDefeat();
         }
+
+        // ========================================================
+        // GOOGLE ADMOB: Hiển thị Interstitial sau khi có kết quả ván đấu (Thắng hoặc Thua)
+        // Độ trễ 1.2s giúp người chơi kịp nhìn thấy kết quả và lắng nghe âm thanh chiến thắng / thất bại
+        // ========================================================
+        if (window.adsManager) {
+            setTimeout(() => {
+                window.adsManager.showInterstitial();
+            }, 1200);
+        }
     }
 
     launchConfetti() {
