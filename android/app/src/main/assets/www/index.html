@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#38bdf8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Flip Card Hero - Vua Đập Bài</title>
+    <title data-i18n="app.title">Flip Card Hero - Vua Đập Bài</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -25,11 +25,11 @@
                     <img src="icons/card-back.svg" class="splash-card card-right" alt="Card">
                 </div>
                 <h1 class="splash-title">FLIP <span>CARD</span> HERO</h1>
-                <p class="splash-subtitle">⚡ VUA ĐẬP BÀI TUỔI THƠ ⚡</p>
+                <p class="splash-subtitle" data-i18n="splash.subtitle">⚡ VUA ĐẬP BÀI TUỔI THƠ ⚡</p>
                 <div class="splash-loader">
                     <div class="splash-loader-bar"></div>
                 </div>
-                <span class="splash-tip">Đang sẵn sàng vào sàn đấu...</span>
+                <span class="splash-tip" data-i18n="splash.tip">Đang sẵn sàng vào sàn đấu...</span>
             </div>
         </div>
 
@@ -42,22 +42,23 @@
                     <div class="pick-avatar-circle">
                         <img src="icons/hero-player.svg" alt="Hero Avatar">
                     </div>
-                    <div class="pick-badge">⭐ HERO MỚI ⭐</div>
+                    <div class="pick-badge" data-i18n="pick.badge">⭐ HERO MỚI ⭐</div>
                 </div>
 
                 <div class="pick-name-header">
-                    <h2 class="pick-title">ĐẶT TÊN HERO</h2>
-                    <p class="pick-subtitle">Hãy chọn cho bạn một biệt danh thật ngầu!</p>
+                    <h2 class="pick-title" data-i18n="pick.title">ĐẶT TÊN HERO</h2>
+                    <p class="pick-subtitle" data-i18n="pick.subtitle">Hãy chọn cho bạn một biệt danh thật ngầu!</p>
                 </div>
 
                 <div class="pick-input-box">
-                    <label for="input-hero-name" class="input-lbl">Tên Hero (3 - 9 ký tự):</label>
+                    <label for="input-hero-name" class="input-lbl" data-i18n="pick.label">Tên Hero (3 - 9 ký tự):</label>
                     <div class="input-group">
                         <input 
                             type="text" 
                             id="input-hero-name" 
                             class="custom-name-input" 
                             placeholder="Nhập tên..." 
+                            data-i18n-placeholder="pick.placeholder"
                             maxlength="9"
                             autocomplete="off"
                             autocorrect="off"
@@ -66,13 +67,13 @@
                         >
                         <span id="char-counter" class="char-counter">0/9</span>
                     </div>
-                    <div id="name-validation-msg" class="validation-msg">
+                    <div id="name-validation-msg" class="validation-msg" data-i18n="pick.hint">
                         ℹ️ Chỉ gồm chữ cái và số, không chứa dấu cách.
                     </div>
                 </div>
 
                 <button id="btn-confirm-name" class="btn-menu-action btn-play" disabled>
-                    <span class="btn-text">VÀO GAME!</span>
+                    <span class="btn-text" data-i18n="pick.confirm">VÀO GAME!</span>
                     <span class="btn-icon">➔</span>
                 </button>
             </div>
@@ -84,13 +85,13 @@
         <div id="screen-main-menu" class="app-screen hidden">
             <!-- Header bar: Tim + Cài đặt -->
             <header class="menu-header">
-                <div class="game-badge-mini">⭐ HERO</div>
-                <div id="menu-heart-hud" class="heart-hud" title="Mỗi trận tốn 1 tim. Tim tự hồi 1 viên mỗi 30 phút.">
+                <div class="game-badge-mini" data-i18n="menu.badge">⭐ HERO</div>
+                <div id="menu-heart-hud" class="heart-hud" title="Mỗi trận tốn 1 tim. Tim tự hồi 1 viên mỗi 30 phút." data-i18n-title="menu.heartTitle">
                     <span class="heart-hud-icon">❤️</span>
                     <span class="heart-hud-count"><strong id="heart-count">10</strong><span class="heart-hud-max">/10</span></span>
-                    <span id="heart-timer" class="heart-hud-timer">ĐẦY</span>
+                    <span id="heart-timer" class="heart-hud-timer" data-i18n="common.full">ĐẦY</span>
                 </div>
-                <button id="btn-menu-settings" class="icon-round-btn" title="Cài đặt">⚙️</button>
+                <button id="btn-menu-settings" class="icon-round-btn" title="Cài đặt" data-i18n-title="menu.settingsTitle">⚙️</button>
             </header>
 
             <!-- Main Title & Logo -->
@@ -104,13 +105,13 @@
                 <div class="menu-player-info">
                     <img src="icons/hero-player.svg" alt="Player Hero" class="menu-player-avatar">
                     <span id="menu-player-name-tag" class="hero-name-tag player-tag">LEO (BẠN)</span>
-                    <button id="btn-edit-name" class="btn-edit-name" title="Đổi tên">✏️</button>
+                    <button id="btn-edit-name" class="btn-edit-name" title="Đổi tên" data-i18n-title="menu.editName">✏️</button>
                 </div>
-                <span class="menu-vs-hint">⚔️ CHỌN<br>BOSS ĐỂ ĐẤU</span>
+                <span class="menu-vs-hint" data-i18n-html="menu.hint">⚔️ CHỌN<br>BOSS ĐỂ ĐẤU</span>
             </div>
 
             <!-- 3 Boss: Easy / Medium / Hard -->
-            <section class="boss-select-section" aria-label="Chọn boss">
+            <section class="boss-select-section" aria-label="Chọn boss" data-i18n-aria="menu.bossAria">
                 <div id="boss-select-row" class="boss-select-row"></div>
             </section>
 
@@ -124,23 +125,23 @@
 
                 <button id="btn-how-to-play" class="btn-menu-action btn-how">
                     <span class="btn-icon">📖</span>
-                    <span class="btn-text">LUẬT CHƠI</span>
+                    <span class="btn-text" data-i18n="menu.rules">LUẬT CHƠI</span>
                 </button>
 
                 <button id="btn-free-heart" class="btn-menu-action btn-free-heart">
                     <span class="btn-icon">📺</span>
-                    <span id="btn-free-heart-text" class="btn-text">NHẬN 1 ❤️ MIỄN PHÍ</span>
+                    <span id="btn-free-heart-text" class="btn-text" data-i18n="menu.freeHeart">NHẬN 1 ❤️ MIỄN PHÍ</span>
                     <span class="free-heart-ad-tag">AD</span>
                 </button>
 
                 <button id="btn-leaderboard" class="btn-menu-action btn-leaderboard">
                     <span class="btn-icon">🏆</span>
-                    <span class="btn-text">BẢNG XẾP HẠNG</span>
+                    <span class="btn-text" data-i18n="menu.leaderboard">BẢNG XẾP HẠNG</span>
                 </button>
             </div>
 
             <footer class="menu-footer">
-                <span>© 2026 Flip Card Hero • Đập Bài Đối Kháng</span>
+                <span data-i18n="menu.footer">© 2026 Flip Card Hero • Đập Bài Đối Kháng</span>
             </footer>
 
             <div id="menu-toast" class="menu-toast hidden" role="status" aria-live="polite"></div>
@@ -152,20 +153,20 @@
         <div id="screen-game" class="app-screen hidden">
             <!-- Header Bar -->
             <header class="game-header">
-                <button id="btn-exit-to-menu" class="btn-header-back" title="Quay về menu">
+                <button id="btn-exit-to-menu" class="btn-header-back" title="Quay về menu" data-i18n-title="game.backTitle">
                     <span class="back-arrow">◀</span>
-                    <span class="back-text">MENU</span>
+                    <span class="back-text" data-i18n="game.menu">MENU</span>
                 </button>
                 <div class="game-header-center">
                     <div id="round-badge" class="round-badge">HIỆP 1 / 5</div>
                     <span id="game-boss-tier" class="boss-tier-chip easy">EASY</span>
                 </div>
                 <div class="game-header-right">
-                    <div id="game-heart-hud" class="heart-hud compact" title="Tim còn lại">
+                    <div id="game-heart-hud" class="heart-hud compact" title="Tim còn lại" data-i18n-title="game.heartsTitle">
                         <span class="heart-hud-icon">❤️</span>
                         <strong id="game-heart-count">10</strong>
                     </div>
-                    <button id="btn-sound-toggle" class="icon-round-btn-sm" title="Âm thanh">🔊</button>
+                    <button id="btn-sound-toggle" class="icon-round-btn-sm" title="Âm thanh" data-i18n-title="game.soundTitle">🔊</button>
                 </div>
             </header>
 
@@ -178,7 +179,7 @@
                     </div>
                     <div class="char-hud-info">
                         <span id="game-player-hud-name" class="char-hud-name">BẠN</span>
-                        <span class="char-hud-cards"><strong id="player-card-count">10</strong> Lá</span>
+                        <span class="char-hud-cards"><strong id="player-card-count">10</strong> <span data-i18n="common.cards">Lá</span></span>
                     </div>
                     <div class="char-deck-vis-box">
                         <div id="player-deck-stack" class="deck-cards-vis"></div>
@@ -194,7 +195,7 @@
                     </div>
                     <div class="char-hud-info" style="text-align: right;">
                         <span id="game-bot-hud-name" class="char-hud-name">ROBO TẬP SỰ</span>
-                        <span class="char-hud-cards"><strong id="bot-card-count">10</strong> Lá</span>
+                        <span class="char-hud-cards"><strong id="bot-card-count">10</strong> <span data-i18n="common.cards">Lá</span></span>
                     </div>
                     <div class="char-avatar-ring bot-ring">
                         <img src="icons/hero-bot.svg" alt="Robo">
@@ -225,7 +226,7 @@
             <!-- THANH SMASH BAR & NÚT ĐẬP TO (Đã bỏ hiển thị tốc độ và số 5%) -->
             <footer id="smash-bar-container" class="smash-control-panel">
                 <div class="bar-header-info">
-                    <span class="bar-title">⚡ LỰC ĐẬP (SMASH STRENGTH)</span>
+                    <span class="bar-title" data-i18n="game.smashTitle">⚡ LỰC ĐẬP (SMASH STRENGTH)</span>
                 </div>
 
                 <!-- Thanh canh lực -->
@@ -240,7 +241,7 @@
 
                 <!-- Nút đập siêu to cho ngón tay cái -->
                 <button id="btn-smash" class="btn-smash">
-                    💥 ĐẬP NGAY! 💥
+                    <span data-i18n="game.smashButton">💥 ĐẬP NGAY! 💥</span>
                 </button>
             </footer>
         </div>
@@ -253,48 +254,48 @@
             <!-- 4.1. MODAL OẰN TÙ TÌ (CHỈ DÙNG Ở ROUND 1) -->
             <div id="modal-rps" class="game-modal hidden">
                 <div class="modal-top-bar">
-                    <button class="btn-modal-back btn-back-to-menu-action" title="Về Menu">
-                        <span class="back-arrow">◀</span> Menu
+                    <button class="btn-modal-back btn-back-to-menu-action" title="Về Menu" data-i18n-title="common.menu">
+                        <span class="back-arrow">◀</span> <span data-i18n="common.menu">Menu</span>
                     </button>
-                    <span class="modal-badge-title">Hiệp 1</span>
+                    <span class="modal-badge-title" data-i18n="rps.badge">Hiệp 1</span>
                 </div>
 
                 <div class="modal-header-icon">✌️✊✋</div>
-                <h2 class="modal-title">OẰN TÙ TÌ MỞ MÀN!</h2>
-                <p id="rps-status" class="modal-desc">Chọn ra cái gì để quyết định bên nào được đập trước ở Hiệp 1!</p>
+                <h2 class="modal-title" data-i18n="rps.title">OẰN TÙ TÌ MỞ MÀN!</h2>
+                <p id="rps-status" class="modal-desc" data-i18n="rps.desc">Chọn ra cái gì để quyết định bên nào được đập trước ở Hiệp 1!</p>
 
                 <div class="rps-arena">
                     <div class="rps-choice-slot">
                         <div id="rps-player-choice" class="choice-icon">❓</div>
-                        <span id="rps-player-label" class="slot-label">Bạn</span>
+                        <span id="rps-player-label" class="slot-label" data-i18n="rps.you">Bạn</span>
                     </div>
                     <div class="rps-vs">VS</div>
                     <div class="rps-choice-slot">
                         <div id="rps-bot-choice" class="choice-icon">❓</div>
-                        <span id="rps-bot-label" class="slot-label">Robo</span>
+                        <span id="rps-bot-label" class="slot-label" data-i18n="rps.robot">Robo</span>
                     </div>
                 </div>
 
                 <div class="rps-options">
-                    <button class="btn-rps" data-choice="rock"><span>✊</span>Búa</button>
-                    <button class="btn-rps" data-choice="scissors"><span>✌️</span>Kéo</button>
-                    <button class="btn-rps" data-choice="paper"><span>✋</span>Bao</button>
+                    <button class="btn-rps" data-choice="rock" data-i18n-html="rps.rockHtml"><span>✊</span>Búa</button>
+                    <button class="btn-rps" data-choice="scissors" data-i18n-html="rps.scissorsHtml"><span>✌️</span>Kéo</button>
+                    <button class="btn-rps" data-choice="paper" data-i18n-html="rps.paperHtml"><span>✋</span>Bao</button>
                 </div>
             </div>
 
             <!-- 4.2. MODAL CHỌN CƯỢC (TỪ ROUND 2 ĐẾN ROUND 5) - ĐÃ BỎ CON BÀI TÂY J -->
             <div id="modal-stake" class="game-modal hidden">
                 <div class="modal-top-bar">
-                    <button class="btn-modal-back btn-back-to-menu-action" title="Về Menu">
-                        <span class="back-arrow">◀</span> Menu
+                    <button class="btn-modal-back btn-back-to-menu-action" title="Về Menu" data-i18n-title="common.menu">
+                        <span class="back-arrow">◀</span> <span data-i18n="common.menu">Menu</span>
                     </button>
-                    <span class="modal-badge-title">Chọn Cược</span>
+                    <span class="modal-badge-title" data-i18n="stake.badge">Chọn Cược</span>
                 </div>
 
                 <!-- Thay con bài tây Joker bằng biểu tượng ngôi sao lửa của trẻ em -->
                 <div class="modal-header-icon">⭐🔥</div>
-                <h2 class="modal-title">CHỌN MỨC CƯỢC</h2>
-                <p id="stake-prompt-text" class="modal-desc">
+                <h2 class="modal-title" data-i18n="stake.title">CHỌN MỨC CƯỢC</h2>
+                <p id="stake-prompt-text" class="modal-desc" data-i18n="stake.desc">
                     Người thắng hiệp trước được quyền chọn số bài cược:
                 </p>
 
@@ -302,17 +303,17 @@
 
                 <div id="stake-bot-notice" class="stake-bot-loader hidden">
                     <div class="spinner"></div>
-                    <span>Robo Titan đang suy nghĩ mức cược...</span>
+                    <span id="stake-bot-notice-text">Robo Titan đang suy nghĩ mức cược...</span>
                 </div>
             </div>
 
             <!-- 4.3. MODAL KẾT QUẢ: YOU WON / YOU LOST -->
             <div id="modal-result" class="game-modal result-modal hidden">
                 <div class="modal-top-bar">
-                    <button class="btn-modal-back btn-back-to-menu-action" title="Về Menu">
-                        <span class="back-arrow">◀</span> Menu
+                    <button class="btn-modal-back btn-back-to-menu-action" title="Về Menu" data-i18n-title="common.menu">
+                        <span class="back-arrow">◀</span> <span data-i18n="common.menu">Menu</span>
                     </button>
-                    <span class="modal-badge-title">Kết Quả</span>
+                    <span class="modal-badge-title" data-i18n="result.badge">Kết Quả</span>
                 </div>
 
                 <div id="result-icon-container" class="result-hero-img-box">
@@ -324,16 +325,16 @@
                 <div id="result-score-detail" class="result-score-container"></div>
 
                 <button id="btn-open-wheel" class="btn-wheel-cta hidden">
-                    🎡 VÒNG QUAY MAY MẮN
+                    <span data-i18n="result.wheelCta">🎡 VÒNG QUAY MAY MẮN</span>
                     <span id="wheel-cta-reward" class="wheel-cta-reward">×1 ❤️</span>
                 </button>
 
                 <div class="result-buttons-row">
                     <button id="btn-play-again" class="btn-action-primary">
-                        🔄 CHƠI LẠI <span class="replay-heart-cost">-1 ❤️</span>
+                        <span data-i18n="result.replay">🔄 CHƠI LẠI</span> <span class="replay-heart-cost">-1 ❤️</span>
                     </button>
                     <button id="btn-result-home" class="btn-action-secondary">
-                        🏠 VỀ MENU
+                        <span data-i18n="result.home">🏠 VỀ MENU</span>
                     </button>
                 </div>
             </div>
@@ -341,59 +342,59 @@
             <!-- 4.4. MODAL LUẬT CHƠI (HOW TO PLAY) - ĐÃ BỎ SỐ 5% -->
             <div id="modal-how-to-play" class="game-modal how-to-play-modal hidden">
                 <div class="modal-top-bar">
-                    <button id="btn-back-how" class="btn-modal-back" title="Quay lại">
-                        <span class="back-arrow">◀</span> Quay Lại
+                    <button id="btn-back-how" class="btn-modal-back" title="Quay lại" data-i18n-title="common.back">
+                        <span class="back-arrow">◀</span> <span data-i18n="common.back">Quay Lại</span>
                     </button>
-                    <span class="modal-badge-title">Hướng Dẫn</span>
+                    <span class="modal-badge-title" data-i18n="how.badge">Hướng Dẫn</span>
                 </div>
 
                 <div class="modal-header-icon" style="margin-top: 4px;">📖⭐</div>
-                <h2 class="modal-title">CÁCH CHƠI VUA ĐẬP BÀI</h2>
+                <h2 class="modal-title" data-i18n="how.title">CÁCH CHƠI VUA ĐẬP BÀI</h2>
                 <div class="how-rules-list">
                     <div class="rule-card">
                         <span class="rule-num">1</span>
-                        <div class="rule-text">
+                        <div class="rule-text" data-i18n-html="how.rule1">
                             <strong>Tối đa 10 Tim:</strong> Mỗi trận tốn <strong>1 ❤️</strong>. Tim tự hồi <strong>1 ❤️ mỗi 30 phút</strong>, kể cả khi tắt game (tối đa 10 tim).
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">2</span>
-                        <div class="rule-text">
+                        <div class="rule-text" data-i18n-html="how.rule2">
                             <strong>3 Boss: Easy / Medium / Hard:</strong> Boss càng khó, vùng vàng càng hẹp và Robo càng tinh ranh.
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">3</span>
-                        <div class="rule-text">
+                        <div class="rule-text" data-i18n-html="how.rule3">
                             <strong>Khởi đầu 10 lá bài:</strong> Mỗi bên cầm 10 lá. Trận đấu diễn ra trong tối đa 5 hiệp.
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">4</span>
-                        <div class="rule-text">
+                        <div class="rule-text" data-i18n-html="how.rule4">
                             <strong>Hiệp 1:</strong> Bắt buộc cược 1 lá mỗi bên. Oẳn tù tì để biết bên nào được đập trước!
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">5</span>
-                        <div class="rule-text">
+                        <div class="rule-text" data-i18n-html="how.rule5">
                             <strong>Hiệp 2 đến 5:</strong> KHÔNG cần oẳn tù tì! Người thắng hiệp trước được quyền chọn cược (2-5 lá) VÀ được quyền đập trước!
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">6</span>
-                        <div class="rule-text">
+                        <div class="rule-text" data-i18n-html="how.rule6">
                             <strong>Canh đúng vạch Vàng & Đập hụt:</strong> Đập trúng vạch vàng để ăn hết bài cược; đập hụt sẽ đổi lượt. Hết bài trước là thua ngay!
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">7</span>
-                        <div class="rule-text">
+                        <div class="rule-text" data-i18n-html="how.rule7">
                             <strong>Thắng → Vòng quay may mắn:</strong> Thắng trận để nhận 1 lượt quay may mắn!
                         </div>
                     </div>
                 </div>
-                <button id="btn-close-how" class="btn-action-primary" style="margin-top: 14px; width: 100%;">
+                <button id="btn-close-how" class="btn-action-primary" style="margin-top: 14px; width: 100%;" data-i18n-html="how.close">
                     ◀ ĐÃ HIỂU, QUAY LẠI
                 </button>
             </div>
@@ -401,18 +402,18 @@
             <!-- 4.5. MODAL CÀI ĐẶT (SETTINGS) -->
             <div id="modal-settings" class="game-modal settings-modal hidden">
                 <div class="modal-top-bar">
-                    <button id="btn-back-settings" class="btn-modal-back" title="Quay lại">
-                        <span class="back-arrow">◀</span> Quay Lại
+                    <button id="btn-back-settings" class="btn-modal-back" title="Quay lại" data-i18n-title="common.back">
+                        <span class="back-arrow">◀</span> <span data-i18n="common.back">Quay Lại</span>
                     </button>
-                    <span class="modal-badge-title">Cài Đặt</span>
+                    <span class="modal-badge-title" data-i18n="settings.badge">Cài Đặt</span>
                 </div>
 
-                <h2 class="modal-title">CÀI ĐẶT GAME</h2>
+                <h2 class="modal-title" data-i18n="settings.title">CÀI ĐẶT GAME</h2>
                 <div class="settings-rows">
                     <div class="setting-item">
                         <div class="setting-label">
                             <span class="setting-icon">🔊</span>
-                            <span>Hiệu ứng âm thanh</span>
+                            <span data-i18n="settings.sound">Hiệu ứng âm thanh</span>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="setting-sound-toggle" checked>
@@ -423,20 +424,31 @@
                     <div class="setting-item">
                         <div class="setting-label">
                             <span class="setting-icon">📳</span>
-                            <span>Rung điện thoại (Haptic)</span>
+                            <span data-i18n="settings.vibrate">Rung điện thoại (Haptic)</span>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="setting-vibrate-toggle" checked>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="setting-icon">🌐</span>
+                            <span data-i18n="settings.language">Ngôn ngữ</span>
+                        </div>
+                        <div class="lang-switch">
+                            <button type="button" class="lang-btn" data-lang="vi">VI</button>
+                            <button type="button" class="lang-btn" data-lang="en">EN</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="settings-credit">
-                    <p>Phiên bản 1.4.0 • Hero Edition</p>
+                    <p data-i18n="settings.version">Phiên bản 1.4.0 • Hero Edition</p>
                 </div>
 
-                <button id="btn-close-settings" class="btn-action-primary" style="margin-top: 14px; width: 100%;">
+                <button id="btn-close-settings" class="btn-action-primary" style="margin-top: 14px; width: 100%;" data-i18n-html="settings.close">
                     ◀ LƯU & QUAY LẠI
                 </button>
             </div>
@@ -444,25 +456,23 @@
             <!-- 4.6. MODAL VÒNG QUAY MAY MẮN (CHỈ KHI THẮNG) -->
             <div id="modal-wheel" class="game-modal wheel-modal hidden">
                 <div class="modal-top-bar">
-                    <button id="btn-wheel-back" class="btn-modal-back" title="Để sau">
-                        <span class="back-arrow">◀</span> Để sau
+                    <button id="btn-wheel-back" class="btn-modal-back" title="Để sau" data-i18n-title="common.later">
+                        <span class="back-arrow">◀</span> <span data-i18n="wheel.later">Để sau</span>
                     </button>
-                    <span class="modal-badge-title">Phần Thưởng</span>
+                    <span class="modal-badge-title" data-i18n="wheel.badge">Phần Thưởng</span>
                 </div>
 
-                <div class="modal-header-icon">🎡🎁</div>
-                <h2 class="modal-title">VÒNG QUAY MAY MẮN</h2>
-                <p id="wheel-subtitle" class="modal-desc">Chạm QUAY để thử vận may!</p>
+                <h2 class="modal-title" data-i18n="wheel.title">VÒNG QUAY MAY MẮN</h2>
 
                 <div id="wheel-grid" class="wheel-grid"></div>
 
-                <div id="wheel-result" class="wheel-result">🍀 Chúc bạn may mắn!</div>
+                <div id="wheel-result" class="wheel-result" data-i18n="wheel.default">🍀 Chúc bạn may mắn!</div>
 
-                <button id="btn-spin-wheel" class="btn-spin-wheel">🎡 QUAY NGAY!</button>
-                <button id="btn-wheel-continue" class="btn-action-primary hidden" style="width: 100%;">TIẾP TỤC ▶</button>
+                <button id="btn-spin-wheel" class="btn-spin-wheel" data-i18n="wheel.spin">🎡 QUAY NGAY!</button>
+                <button id="btn-wheel-continue" class="btn-action-primary hidden" style="width: 100%;" data-i18n="wheel.continue">TIẾP TỤC ▶</button>
 
                 <div class="wheel-heart-hud">
-                    <span>Tim hiện có:</span>
+                    <span data-i18n="wheel.hearts">Tim hiện có:</span>
                     <strong>❤️ <span id="wheel-heart-count">10</span>/10</strong>
                 </div>
             </div>
@@ -470,43 +480,43 @@
             <!-- 4.7. MODAL HẾT TIM -->
             <div id="modal-no-hearts" class="game-modal no-hearts-modal hidden">
                 <div class="modal-top-bar">
-                    <button id="btn-close-no-hearts" class="btn-modal-back" title="Đóng">
-                        <span class="back-arrow">◀</span> Đóng
+                    <button id="btn-close-no-hearts" class="btn-modal-back" title="Đóng" data-i18n-title="common.close">
+                        <span class="back-arrow">◀</span> <span data-i18n="noHearts.closeBtn">Đóng</span>
                     </button>
-                    <span class="modal-badge-title">Hết Tim</span>
+                    <span class="modal-badge-title" data-i18n="noHearts.badge">Hết Tim</span>
                 </div>
 
                 <div class="modal-header-icon">💔⏳</div>
-                <h2 class="modal-title">BẠN ĐÃ HẾT TIM!</h2>
-                <p class="modal-desc">Mỗi trận đấu tốn <strong>1 ❤️</strong>.<br>Tim tự hồi <strong>1 ❤️ mỗi 30 phút</strong> (kể cả khi tắt game).</p>
+                <h2 class="modal-title" data-i18n="noHearts.title">BẠN ĐÃ HẾT TIM!</h2>
+                <p class="modal-desc" data-i18n-html="noHearts.desc">Mỗi trận đấu tốn <strong>1 ❤️</strong>.<br>Tim tự hồi <strong>1 ❤️ mỗi 30 phút</strong> (kể cả khi tắt game).</p>
 
                 <div class="no-hearts-timer-box">
-                    <span>❤️ Tim tiếp theo sau</span>
+                    <span data-i18n="noHearts.next">❤️ Tim tiếp theo sau</span>
                     <strong id="no-hearts-countdown">29:59</strong>
                 </div>
 
-                <button id="btn-no-hearts-close" class="btn-action-primary" style="width: 100%; margin-top: 14px;">OK, CHỜ THÊM</button>
+                <button id="btn-no-hearts-close" class="btn-action-primary" style="width: 100%; margin-top: 14px;" data-i18n="noHearts.close">OK, CHỜ THÊM</button>
             </div>
 
             <!-- 4.8. MODAL BẢNG XẾP HẠNG (FIREBASE) -->
             <div id="modal-leaderboard" class="game-modal leaderboard-modal hidden">
                 <div class="modal-top-bar">
-                    <button id="btn-close-leaderboard" class="btn-modal-back" title="Quay lại">
-                        <span class="back-arrow">◀</span> Quay Lại
+                    <button id="btn-close-leaderboard" class="btn-modal-back" title="Quay lại" data-i18n-title="common.back">
+                        <span class="back-arrow">◀</span> <span data-i18n="common.back">Quay Lại</span>
                     </button>
-                    <span class="modal-badge-title">Xếp Hạng</span>
+                    <span class="modal-badge-title" data-i18n="leaderboard.badge">Xếp Hạng</span>
                 </div>
 
                 <div class="modal-header-icon">🏆</div>
-                <h2 class="modal-title">BẢNG XẾP HẠNG</h2>
+                <h2 class="modal-title" data-i18n="leaderboard.title">BẢNG XẾP HẠNG</h2>
 
                 <div id="leaderboard-my-score" class="leaderboard-my-score"></div>
                 <div id="leaderboard-list" class="leaderboard-list">
-                    <div class="leaderboard-state">Đang tải bảng xếp hạng...</div>
+                    <div class="leaderboard-state" data-i18n="leaderboard.loading">Đang tải bảng xếp hạng...</div>
                 </div>
 
                 <button id="btn-refresh-leaderboard" class="btn-action-primary" style="width: 100%; margin-top: 10px;">
-                    🔄 LÀM MỚI
+                    <span data-i18n="leaderboard.refresh">🔄 LÀM MỚI</span>
                 </button>
             </div>
 
@@ -519,6 +529,7 @@
     <!-- SCRIPTS -->
     <script src="js/audio.js"></script>
     <script src="js/ads.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/leaderboard.js"></script>
     <script src="js/game.js"></script>
 </body>

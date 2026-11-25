@@ -47,6 +47,8 @@ public class MainActivity extends Activity {
     private AdView adView;
     private InterstitialAd mInterstitialAd;
     private boolean isInterstitialLoading = false;
+    private boolean isInterstitialShowing = false;
+    private boolean pendingInterstitialShow = false;
 
     private RewardedAd mRewardedAd;
     private boolean isRewardedLoading = false;
@@ -231,6 +233,8 @@ public class MainActivity extends Activity {
                         public void onAdDismissedFullScreenContent() {
                             Log.i(TAG, "Người dùng đã đóng quảng cáo Interstitial");
                             mInterstitialAd = null;
+                            isInterstitialShowing = false;
+                            pendingInterstitialShow = false;
                             safeHideSystemUI();
                             // Tải trước lượt quảng cáo tiếp theo cho ván sau
                             loadInterstitialAd();
@@ -240,6 +244,8 @@ public class MainActivity extends Activity {
                         public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
                             Log.e(TAG, "Không thể hiển thị Interstitial: " + adError.getMessage());
                             mInterstitialAd = null;
+                            isInterstitialShowing = false;
+                            pendingInterstitialShow = false;
                             safeHideSystemUI();
                             loadInterstitialAd();
                         }
@@ -247,8 +253,17 @@ public class MainActivity extends Activity {
                         @Override
                         public void onAdShowedFullScreenContent() {
                             Log.i(TAG, "Interstitial AdMob đang hiển thị toàn màn hình");
+                            isInterstitialShowing = true;
                         }
                     });
+
+                    // Nếu người chơi vừa kết thúc trận khi ad chưa tải xong:
+                    // hiển thị ngay khi ad sẵn sàng.
+                    if (pendingInterstitialShow && !isInterstitialShowing) {
+                        pendingInterstitialShow = false;
+                        isInterstitialShowing = true;
+                        interstitialAd.show(MainActivity.this);
+                    }
                 }
 
                 @Override
@@ -256,6 +271,7 @@ public class MainActivity extends Activity {
                     Log.w(TAG, "Interstitial tải thất bại: " + loadAdError.getMessage() + " (Code: " + loadAdError.getCode() + ")");
                     mInterstitialAd = null;
                     isInterstitialLoading = false;
+                    pendingInterstitialShow = false;
                 }
             });
         } catch (Throwable t) {
@@ -271,11 +287,20 @@ public class MainActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                if (isInterstitialShowing) {
+                    Log.w(TAG, "Interstitial đang hiển thị, bỏ qua yêu cầu mới");
+                    return;
+                }
+
                 if (mInterstitialAd != null) {
                     Log.i(TAG, "Bắt đầu hiển thị Interstitial AdMob...");
+                    pendingInterstitialShow = false;
+                    isInterstitialShowing = true;
                     mInterstitialAd.show(MainActivity.this);
                 } else {
-                    Log.w(TAG, "Interstitial chưa sẵn sàng. Đang tải lại...");
+                    // Ad chưa tải xong: chờ tải xong rồi hiển thị ngay.
+                    Log.w(TAG, "Interstitial chưa sẵn sàng. Sẽ hiển thị ngay khi tải xong...");
+                    pendingInterstitialShow = true;
                     loadInterstitialAd();
                 }
             }

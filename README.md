@@ -63,6 +63,25 @@ Game đập bài tuổi thơ đối kháng với Máy (AI Bot), được thiết
 
 ---
 
+## 🌐 ĐA NGÔN NGỮ (TIẾNG VIỆT / ENGLISH)
+
+- Game hỗ trợ **Tiếng Việt** và **English**.
+- Lần đầu mở game sẽ tự chọn theo ngôn ngữ máy:
+  - Máy tiếng Anh → English
+  - Các ngôn ngữ khác → Tiếng Việt (fallback)
+- Người chơi có thể đổi ngôn ngữ trong **Cài đặt → Ngôn ngữ (VI / EN)**.
+- Lựa chọn được lưu vào `localStorage` và áp dụng ngay, không cần reload.
+- Tất cả nội dung hiển thị đều được dịch: menu, luật chơi, popup, kết quả, vòng quay, leaderboard, thông báo lỗi, tên boss...
+- Tên người chơi được giữ nguyên, không dịch.
+
+Code i18n nằm ở:
+
+```text
+js/i18n.js
+```
+
+---
+
 ## 🚀 CÁCH CHƠI THỬ NGAY TRÊN MÁY TÍNH / TRÌNH DUYỆT
 
 ### Cách 1: Mở trực tiếp
@@ -183,7 +202,7 @@ Dự án đã có sẵn thư mục mã nguồn Android Native WebView tại thư
 Dự án đã tích hợp hoàn chỉnh Google Mobile Ads SDK (AdMob) trên Android và cầu nối JavaScript Bridge:
 - **Banner Ad:** Hiển thị tự động ở mép dưới của tất cả màn hình game (không che lấp nút bấm).
   - Ad Unit ID: `ca-app-pub-1345063149639557/1736099863`
-- **Interstitial Ad:** Tự động kích hoạt hiển thị toàn màn hình sau khi có kết quả ván đấu (Thắng hoặc Thua).
+- **Interstitial Ad:** Hiển thị ngay khi có kết quả ván đấu (cả Thắng và Thua). Nếu quảng cáo chưa tải xong, app sẽ chờ và hiển thị ngay khi sẵn sàng.
   - Ad Unit ID: `ca-app-pub-1345063149639557/9583508131`
 - **Rewarded Ad:** Kích hoạt khi người chơi bấm nút **“NHẬN 1 ❤️ MIỄN PHÍ”** ở main menu. Xem xong được cộng 1 tim (tối đa 10); đóng quảng cáo sớm sẽ không được thưởng.
   - Ad Unit ID: `ca-app-pub-1345063149639557/1159021967`
@@ -294,6 +313,7 @@ Flip Card Hero/
 ├── js/
 │   ├── audio.js            # Hệ thống âm thanh vỗ đập Web Audio API & Rung Haptic
 │   ├── ads.js              # Bridge Banner / Interstitial / Rewarded Ad
+│   ├── i18n.js             # Đa ngôn ngữ VI/EN
 │   ├── leaderboard.js      # Bridge gọi leaderboard native Android
 │   └── game.js             # Logic Gameplay Core, State Machine, AI Máy
 ├── icons/                  # Bộ icon chuẩn HD (192x192, 512x512)

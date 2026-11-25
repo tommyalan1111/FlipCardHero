@@ -12,9 +12,6 @@
 (function () {
     class AdsManager {
         constructor() {
-            this.lastInterstitialTime = 0;
-            this.cooldownMs = 6000; // Giãn cách tối thiểu 6s giữa các lần gọi Interstitial
-
             // Trạng thái Rewarded Ad (quảng cáo xem để nhận tim)
             this.rewardedPromise = null;
             this.rewardedResolve = null;
@@ -54,13 +51,6 @@
          * Được gọi sau khi có kết quả ván đấu (Thắng hoặc Thua)
          */
         showInterstitial() {
-            const now = Date.now();
-            if (now - this.lastInterstitialTime < this.cooldownMs) {
-                console.log('[AdMob] Bỏ qua Interstitial: Đang trong thời gian cooldown.');
-                return;
-            }
-
-            this.lastInterstitialTime = now;
             const bridge = this.getBridge();
 
             if (bridge && typeof bridge.showInterstitial === 'function') {
