@@ -1,0 +1,5 @@
+com.flipcardhero.game.test.app-updated_navigation_xml-0 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/generated/updated_navigation_xml/debugAndroidTest
+com.flipcardhero.game.test.app-packageDebugAndroidTestResources-1 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/incremental/debugAndroidTest/packageDebugAndroidTestResources/merged.dir
+com.flipcardhero.game.test.app-packageDebugAndroidTestResources-2 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/incremental/debugAndroidTest/packageDebugAndroidTestResources/stripped.dir
+com.flipcardhero.game.test.app-debugAndroidTest-3 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources
+gradleHome-0 /Users/Amuro/.gradle

@@ -1,0 +1,6 @@
+# Cấu hình Android theo từng máy (Windows/macOS/Linux mỗi máy tự tạo)
+android/local.properties
+android/.gradle/config.properties
+
+# Thư mục tạm dùng khi test
+.tmp-*/

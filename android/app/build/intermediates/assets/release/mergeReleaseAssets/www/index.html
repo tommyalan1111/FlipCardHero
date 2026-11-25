@@ -82,9 +82,14 @@
              2. MÀN HÌNH CHÍNH (MAIN MENU SCREEN)
              ============================================== -->
         <div id="screen-main-menu" class="app-screen hidden">
-            <!-- Header bar -->
+            <!-- Header bar: Tim + Cài đặt -->
             <header class="menu-header">
-                <div class="game-badge-mini">⭐ PHIÊN BẢN HERO</div>
+                <div class="game-badge-mini">⭐ HERO</div>
+                <div id="menu-heart-hud" class="heart-hud" title="Mỗi trận tốn 1 tim. Tim tự hồi 1 viên mỗi 30 phút.">
+                    <span class="heart-hud-icon">❤️</span>
+                    <span class="heart-hud-count"><strong id="heart-count">10</strong><span class="heart-hud-max">/10</span></span>
+                    <span id="heart-timer" class="heart-hud-timer">ĐẦY</span>
+                </div>
                 <button id="btn-menu-settings" class="icon-round-btn" title="Cài đặt">⚙️</button>
             </header>
 
@@ -94,45 +99,46 @@
                 <div class="title-stars">⭐⭐⭐⭐⭐</div>
             </div>
 
-            <!-- Hero VS Battle Banner -->
-            <div class="hero-vs-stage">
-                <!-- Player Hero -->
-                <div class="hero-character-box hero-left">
-                    <img src="icons/hero-player.svg" alt="Player Hero" class="hero-character-img">
-                    <div class="hero-tag-wrapper">
-                        <span id="menu-player-name-tag" class="hero-name-tag player-tag">LEO (BẠN)</span>
-                        <button id="btn-edit-name" class="btn-edit-name" title="Đổi tên">✏️</button>
-                    </div>
+            <!-- Player info & hint -->
+            <div class="menu-player-strip">
+                <div class="menu-player-info">
+                    <img src="icons/hero-player.svg" alt="Player Hero" class="menu-player-avatar">
+                    <span id="menu-player-name-tag" class="hero-name-tag player-tag">LEO (BẠN)</span>
+                    <button id="btn-edit-name" class="btn-edit-name" title="Đổi tên">✏️</button>
                 </div>
-
-                <!-- Epic VS Emblem -->
-                <div class="vs-burst-emblem">
-                    <span class="vs-text">VS</span>
-                </div>
-
-                <!-- Opponent Hero (Mecha Bot) -->
-                <div class="hero-character-box hero-right">
-                    <img src="icons/hero-bot.svg" alt="Mecha Bot" class="hero-character-img">
-                    <span class="hero-name-tag bot-tag">ROBO TITAN</span>
-                </div>
+                <span class="menu-vs-hint">⚔️ CHỌN<br>BOSS ĐỂ ĐẤU</span>
             </div>
+
+            <!-- 3 Boss: Easy / Medium / Hard -->
+            <section class="boss-select-section" aria-label="Chọn boss">
+                <div id="boss-select-row" class="boss-select-row"></div>
+            </section>
 
             <!-- Menu Action Buttons -->
             <div class="menu-buttons-group">
-                <button id="btn-play-now" class="btn-menu-action btn-play">
-                    <span class="btn-icon">🎮</span>
-                    <span class="btn-text">CHƠI NGAY!</span>
+                <button id="btn-battle" class="btn-menu-action btn-play">
+                    <span class="btn-icon">⚔️</span>
+                    <span id="btn-battle-text" class="btn-text">VÀO TRẬN</span>
+                    <span class="heart-cost-pill">-1 ❤️</span>
                 </button>
 
                 <button id="btn-how-to-play" class="btn-menu-action btn-how">
                     <span class="btn-icon">📖</span>
                     <span class="btn-text">LUẬT CHƠI</span>
                 </button>
+
+                <button id="btn-free-heart" class="btn-menu-action btn-free-heart">
+                    <span class="btn-icon">📺</span>
+                    <span id="btn-free-heart-text" class="btn-text">NHẬN 1 ❤️ MIỄN PHÍ</span>
+                    <span class="free-heart-ad-tag">AD</span>
+                </button>
             </div>
 
             <footer class="menu-footer">
                 <span>© 2026 Flip Card Hero • Đập Bài Đối Kháng</span>
             </footer>
+
+            <div id="menu-toast" class="menu-toast hidden" role="status" aria-live="polite"></div>
         </div>
 
         <!-- ==============================================
@@ -145,8 +151,17 @@
                     <span class="back-arrow">◀</span>
                     <span class="back-text">MENU</span>
                 </button>
-                <div id="round-badge" class="round-badge">HIỆP 1 / 5</div>
-                <button id="btn-sound-toggle" class="icon-round-btn-sm" title="Âm thanh">🔊</button>
+                <div class="game-header-center">
+                    <div id="round-badge" class="round-badge">HIỆP 1 / 5</div>
+                    <span id="game-boss-tier" class="boss-tier-chip easy">EASY</span>
+                </div>
+                <div class="game-header-right">
+                    <div id="game-heart-hud" class="heart-hud compact" title="Tim còn lại">
+                        <span class="heart-hud-icon">❤️</span>
+                        <strong id="game-heart-count">10</strong>
+                    </div>
+                    <button id="btn-sound-toggle" class="icon-round-btn-sm" title="Âm thanh">🔊</button>
+                </div>
             </header>
 
             <!-- Scoreboard Status Bars -->
@@ -173,7 +188,7 @@
                         <div id="bot-deck-stack" class="deck-cards-vis"></div>
                     </div>
                     <div class="char-hud-info" style="text-align: right;">
-                        <span class="char-hud-name">ROBO TITAN</span>
+                        <span id="game-bot-hud-name" class="char-hud-name">ROBO TẬP SỰ</span>
                         <span class="char-hud-cards"><strong id="bot-card-count">10</strong> Lá</span>
                     </div>
                     <div class="char-avatar-ring bot-ring">
@@ -251,7 +266,7 @@
                     <div class="rps-vs">VS</div>
                     <div class="rps-choice-slot">
                         <div id="rps-bot-choice" class="choice-icon">❓</div>
-                        <span class="slot-label">Robo</span>
+                        <span id="rps-bot-label" class="slot-label">Robo</span>
                     </div>
                 </div>
 
@@ -303,9 +318,14 @@
 
                 <div id="result-score-detail" class="result-score-container"></div>
 
+                <button id="btn-open-wheel" class="btn-wheel-cta hidden">
+                    🎡 VÒNG QUAY MAY MẮN
+                    <span id="wheel-cta-reward" class="wheel-cta-reward">×1 ❤️</span>
+                </button>
+
                 <div class="result-buttons-row">
                     <button id="btn-play-again" class="btn-action-primary">
-                        🔄 CHƠI LẠI
+                        🔄 CHƠI LẠI <span class="replay-heart-cost">-1 ❤️</span>
                     </button>
                     <button id="btn-result-home" class="btn-action-secondary">
                         🏠 VỀ MENU
@@ -328,31 +348,43 @@
                     <div class="rule-card">
                         <span class="rule-num">1</span>
                         <div class="rule-text">
-                            <strong>Khởi đầu 10 lá bài:</strong> Mỗi bên cầm 10 lá. Trận đấu diễn ra trong tối đa 5 hiệp.
+                            <strong>Tối đa 10 Tim:</strong> Mỗi trận tốn <strong>1 ❤️</strong>. Tim tự hồi <strong>1 ❤️ mỗi 30 phút</strong>, kể cả khi tắt game (tối đa 10 tim).
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">2</span>
                         <div class="rule-text">
-                            <strong>Hiệp 1:</strong> Bắt buộc cược 1 lá mỗi bên. Oẳn tù tì để biết bên nào được đập trước!
+                            <strong>3 Boss: Easy / Medium / Hard:</strong> Boss càng khó, vùng vàng càng hẹp và Robo càng tinh ranh.
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">3</span>
                         <div class="rule-text">
-                            <strong>Hiệp 2 đến 5:</strong> KHÔNG cần oẳn tù tì! Người thắng hiệp trước được quyền chọn cược (2-5 lá) VÀ được quyền đập trước!
+                            <strong>Khởi đầu 10 lá bài:</strong> Mỗi bên cầm 10 lá. Trận đấu diễn ra trong tối đa 5 hiệp.
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">4</span>
                         <div class="rule-text">
-                            <strong>Canh đúng vạch Vàng:</strong> Nhấn ĐẬP đúng vạch VÀNG trên thanh để lật bài và ăn hết bài cược. Càng nhiều bài con trỏ chạy càng nhanh!
+                            <strong>Hiệp 1:</strong> Bắt buộc cược 1 lá mỗi bên. Oẳn tù tì để biết bên nào được đập trước!
                         </div>
                     </div>
                     <div class="rule-card">
                         <span class="rule-num">5</span>
                         <div class="rule-text">
-                            <strong>Đập hụt đổi lượt:</strong> Đập hụt sẽ chuyển lượt sang đối thủ. Bên nào hết bài trước thì thua ngay lập tức (Knockout)!
+                            <strong>Hiệp 2 đến 5:</strong> KHÔNG cần oẳn tù tì! Người thắng hiệp trước được quyền chọn cược (2-5 lá) VÀ được quyền đập trước!
+                        </div>
+                    </div>
+                    <div class="rule-card">
+                        <span class="rule-num">6</span>
+                        <div class="rule-text">
+                            <strong>Canh đúng vạch Vàng & Đập hụt:</strong> Đập trúng vạch vàng để ăn hết bài cược; đập hụt sẽ đổi lượt. Hết bài trước là thua ngay!
+                        </div>
+                    </div>
+                    <div class="rule-card">
+                        <span class="rule-num">7</span>
+                        <div class="rule-text">
+                            <strong>Thắng → Vòng quay may mắn:</strong> Thắng trận để nhận 1 lượt quay may mắn!
                         </div>
                     </div>
                 </div>
@@ -397,13 +429,60 @@
                 </div>
 
                 <div class="settings-credit">
-                    <p>Phiên bản 1.3.0 • Hero Edition</p>
+                    <p>Phiên bản 1.4.0 • Hero Edition</p>
                     <p>Tối ưu hóa cho Android & Web di động</p>
                 </div>
 
                 <button id="btn-close-settings" class="btn-action-primary" style="margin-top: 14px; width: 100%;">
                     ◀ LƯU & QUAY LẠI
                 </button>
+            </div>
+
+            <!-- 4.6. MODAL VÒNG QUAY MAY MẮN (CHỈ KHI THẮNG) -->
+            <div id="modal-wheel" class="game-modal wheel-modal hidden">
+                <div class="modal-top-bar">
+                    <button id="btn-wheel-back" class="btn-modal-back" title="Để sau">
+                        <span class="back-arrow">◀</span> Để sau
+                    </button>
+                    <span class="modal-badge-title">Phần Thưởng</span>
+                </div>
+
+                <div class="modal-header-icon">🎡🎁</div>
+                <h2 class="modal-title">VÒNG QUAY MAY MẮN</h2>
+                <p id="wheel-subtitle" class="modal-desc">Chạm QUAY để thử vận may!</p>
+
+                <div id="wheel-grid" class="wheel-grid"></div>
+
+                <div id="wheel-result" class="wheel-result">🍀 Chúc bạn may mắn!</div>
+
+                <button id="btn-spin-wheel" class="btn-spin-wheel">🎡 QUAY NGAY!</button>
+                <button id="btn-wheel-continue" class="btn-action-primary hidden" style="width: 100%;">TIẾP TỤC ▶</button>
+
+                <div class="wheel-heart-hud">
+                    <span>Tim hiện có:</span>
+                    <strong>❤️ <span id="wheel-heart-count">10</span>/10</strong>
+                </div>
+            </div>
+
+            <!-- 4.7. MODAL HẾT TIM -->
+            <div id="modal-no-hearts" class="game-modal no-hearts-modal hidden">
+                <div class="modal-top-bar">
+                    <button id="btn-close-no-hearts" class="btn-modal-back" title="Đóng">
+                        <span class="back-arrow">◀</span> Đóng
+                    </button>
+                    <span class="modal-badge-title">Hết Tim</span>
+                </div>
+
+                <div class="modal-header-icon">💔⏳</div>
+                <h2 class="modal-title">BẠN ĐÃ HẾT TIM!</h2>
+                <p class="modal-desc">Mỗi trận đấu tốn <strong>1 ❤️</strong>.<br>Tim tự hồi <strong>1 ❤️ mỗi 30 phút</strong> (kể cả khi tắt game).</p>
+
+                <div class="no-hearts-timer-box">
+                    <span>❤️ Tim tiếp theo sau</span>
+                    <strong id="no-hearts-countdown">29:59</strong>
+                </div>
+
+                <button id="btn-no-hearts-close" class="btn-action-primary" style="width: 100%; margin-top: 14px;">OK, CHỜ THÊM</button>
             </div>
 
         </div>

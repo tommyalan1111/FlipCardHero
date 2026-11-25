@@ -21,9 +21,13 @@
     <!-- Mã đơn vị quảng cáo Interstitial (sau khi có kết quả thắng/thua mỗi màn game) -->
     <string name="admob_interstitial_id">ca-app-pub-1345063149639557/9583508131</string>
 
+    <!-- Mã đơn vị quảng cáo Rewarded (xem quảng cáo để nhận 1 tim miễn phí) -->
+    <string name="admob_rewarded_id">ca-app-pub-1345063149639557/1159021967</string>
+
     <!-- Mã Test AdMob chính thức của Google (Dùng khi chạy thử nghiệm trên máy ảo hoặc thiết bị dev) -->
     <string name="admob_test_banner_id">ca-app-pub-3940256099942544/6300978111</string>
     <string name="admob_test_interstitial_id">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="admob_test_rewarded_id">ca-app-pub-3940256099942544/5224354917</string>
 
     <!-- Đặt true nếu muốn dùng ID test để kiểm tra hoạt động quảng cáo; false để dùng ID thật đã cung cấp -->
     <bool name="use_test_ads">false</bool>

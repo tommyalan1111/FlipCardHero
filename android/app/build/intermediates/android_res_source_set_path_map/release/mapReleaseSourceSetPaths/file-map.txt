@@ -1,8 +1,8 @@
-com.flipcardhero.game.app-pngs-0 E:\Work\FlipCardHero\android\app\build\generated\res\pngs\release
-com.flipcardhero.game.app-updated_navigation_xml-1 E:\Work\FlipCardHero\android\app\build\generated\updated_navigation_xml\release
-com.flipcardhero.game.app-packageReleaseResources-2 E:\Work\FlipCardHero\android\app\build\intermediates\incremental\release\packageReleaseResources\merged.dir
-com.flipcardhero.game.app-packageReleaseResources-3 E:\Work\FlipCardHero\android\app\build\intermediates\incremental\release\packageReleaseResources\stripped.dir
-com.flipcardhero.game.app-release-4 E:\Work\FlipCardHero\android\app\build\intermediates\merged_res\release\mergeReleaseResources
-com.flipcardhero.game.app-main-5 E:\Work\FlipCardHero\android\app\src\main\res
-com.flipcardhero.game.app-release-6 E:\Work\FlipCardHero\android\app\src\release\res
-gradleHome-0 C:\Users\tommy\.gradle
+com.flipcardhero.game.app-pngs-0 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/generated/res/pngs/release
+com.flipcardhero.game.app-updated_navigation_xml-1 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/generated/updated_navigation_xml/release
+com.flipcardhero.game.app-packageReleaseResources-2 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
+com.flipcardhero.game.app-packageReleaseResources-3 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
+com.flipcardhero.game.app-release-4 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/build/intermediates/merged_res/release/mergeReleaseResources
+com.flipcardhero.game.app-main-5 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/src/main/res
+com.flipcardhero.game.app-release-6 /Users/Amuro/Desktop/Work/Flip Card Hero/android/app/src/release/res
+gradleHome-0 /Users/Amuro/.gradle

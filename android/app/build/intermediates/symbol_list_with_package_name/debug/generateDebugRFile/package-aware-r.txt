@@ -1,0 +1,14 @@
+com.flipcardhero.game
+bool use_test_ads
+mipmap ic_launcher
+mipmap ic_launcher_background
+mipmap ic_launcher_foreground
+string admob_app_id
+string admob_banner_id
+string admob_interstitial_id
+string admob_rewarded_id
+string admob_test_banner_id
+string admob_test_interstitial_id
+string admob_test_rewarded_id
+string app_name
+style AppTheme

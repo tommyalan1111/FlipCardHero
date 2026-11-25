@@ -35,6 +35,34 @@ Game đập bài tuổi thơ đối kháng với Máy (AI Bot), được thiết
 
 ---
 
+## ❤️ HỆ THỐNG TIM, 3 BOSS & VÒNG QUAY MAY MẮN
+
+### 1. Tim (Hearts)
+- Mỗi người chơi có tối đa **10 ❤️**.
+- Mỗi trận đấu tốn **1 ❤️** (áp dụng cho cả trận mới và "Chơi lại").
+- Tim tự hồi **1 ❤️ mỗi 30 phút**, kể cả khi tắt game (tính theo thời gian thực và lưu bằng `localStorage`).
+- Khi hết tim, bấm vào trận đấu sẽ hiện bảng "Hết Tim" kèm đồng hồ đếm ngược tới tim tiếp theo.
+- **Nhận tim miễn phí:** Ở main menu có nút **“NHẬN 1 ❤️ MIỄN PHÍ”**. Xem xong Rewarded Ad sẽ được **+1 ❤️**, nhưng không bao giờ vượt quá 10. Khi tim đã đầy, nút tự chuyển thành “TIM ĐÃ ĐẦY” và bị vô hiệu hoá.
+
+### 2. Ba Boss: Easy / Medium / Hard
+- Chọn boss ngay trên màn hình chính trước khi vào trận.
+- **Easy – Robo Tập Sự:** mốc gốc.
+- **Medium – Robo Titan:** khó hơn Easy.
+- **Hard – Robo Hủy Diệt:** khó hơn Medium.
+- Độ khó tăng dần qua từng cấp: vùng vàng hẹp hơn, Robo canh chính xác hơn và cược thông minh hơn.
+- *Ghi chú kỹ thuật cho dev:* mức tăng nội bộ là 30% mỗi cấp (Medium ×1.3, Hard ×1.69 so với Easy). Toàn bộ thông số nằm trong `BOSS_LEVELS` ở đầu file `js/game.js` để dễ cân chỉnh.
+
+### 3. Vòng quay may mắn 9 ô (chỉ khi thắng)
+- Chỉ khi **giành chiến thắng** (không áp dụng khi thua hoặc hòa), người chơi nhận **1 lượt quay**.
+- Vòng quay có **9 ô**, mỗi ô trúng tim thưởng **+1 ❤️**:
+  - **Easy:** 1 ô ❤️ + 8 ô trống.
+  - **Medium:** 2 ô ❤️ + 7 ô trống.
+  - **Hard:** 3 ô ❤️ + 6 ô trống.
+- Trước khi quay, toàn bộ 9 ô đều được **úp mặt** để không lộ vị trí tim. Sau khi quay, ô trúng được lật trước, các ô còn lại lật sau để lộ kết quả.
+- Kết quả quay ngẫu nhiên đều trên 9 ô; tim thưởng được cộng ngay vào hệ thống tim (tối đa 10).
+
+---
+
 ## 🚀 CÁCH CHƠI THỬ NGAY TRÊN MÁY TÍNH / TRÌNH DUYỆT
 
 ### Cách 1: Mở trực tiếp
@@ -52,7 +80,93 @@ Sau đó truy cập: `http://localhost:8080` (hoặc mở trình duyệt trên �
 
 ## 📱 XUẤT BẢN THÀNH ỨNG DỤNG ANDROID (APK)
 
-Dự án đã được tích hợp sẵn 3 phương án để đưa lên điện thoại Android:
+### ⚠️ Quan trọng: luồng build của project này
+
+Project này là **static web game (HTML/CSS/JS thuần) + Android Native WebView**, không phải frontend có bundler và cũng **không dùng Capacitor** cho bản Android hiện tại.
+
+- **Không có `npm run build`** và không cần build web. Game chạy trực tiếp từ `index.html`.
+- **Không chạy `npx cap sync android`** cho project này. Android project là WebView tự viết trong `android/app/src/main/java/com/flipcardhero/game/MainActivity.java`, tự load `file:///android_asset/www/index.html` và tự đăng ký cầu nối AdMob native.
+- `capacitor.config.json` và các script `android:*` trong `package.json` chỉ là **phương án dự phòng/legacy**, không nằm trong luồng build hiện tại. Nếu chuyển hẳn sang Capacitor sẽ cần làm lại Android shell và có thể xung đột với phần AdMob native đang có.
+- `webDir: "."` trong `capacitor.config.json` cũng không phù hợp để `cap sync` thật, vì sẽ copy cả thư mục gốc.
+
+**Luồng đúng:**
+
+```bash
+# 1. Đồng bộ web vào Android assets
+./sync_assets.sh
+
+# 2. Build bằng Gradle
+cd android
+./gradlew assembleDebug       # APK debug
+# hoặc
+./gradlew bundleRelease       # AAB release
+```
+
+Hoặc mở thư mục `android/` bằng Android Studio rồi bấm **Run ▶️** / **Build APK(s)**.
+
+> `./gradlew bundleRelease` tạo AAB **chưa được ký** (unsigned). Để upload lên Google Play, dùng **Build → Generate Signed Bundle / APK** trong Android Studio (chọn AAB + keystore), hoặc cấu hình `signingConfig` cho build type `release`.
+
+`sync_assets.sh` chỉ copy các file/thư mục sau:
+
+```text
+index.html
+manifest.json
+css/
+js/
+icons/
+        ↓
+android/app/src/main/assets/www/
+```
+
+Trên Windows có thể dùng `sync_assets.bat` hoặc `sync_assets.ps1` thay cho `sync_assets.sh`.
+
+#### Cấu hình theo từng máy (Windows / macOS / Linux)
+
+Hai file sau là cấu hình **riêng của từng máy**, đã được đưa vào `.gitignore` và **không commit lên Git**:
+
+- `android/local.properties` — đường dẫn Android SDK.
+- `android/.gradle/config.properties` — đường dẫn JDK mà Android Studio dùng cho Gradle.
+
+Mỗi máy sẽ tự tạo/sửa hai file này, nên project dùng được trên cả Windows và macOS.
+
+**Nếu thiếu `android/local.properties`:**
+
+```bash
+# macOS / Linux
+cp android/local.properties.example android/local.properties
+# Windows (PowerShell)
+Copy-Item android\local.properties.example android\local.properties
+```
+
+Rồi mở file vừa copy và bỏ comment dòng đúng với máy:
+
+```properties
+# macOS
+sdk.dir=/Users/<username>/Library/Android/sdk
+
+# Windows
+sdk.dir=C\:\\Users\\<username>\\AppData\\Local\\Android\\Sdk
+
+# Linux
+sdk.dir=/home/<username>/Android/Sdk
+```
+
+Hoặc đơn giản là mở project bằng Android Studio, IDE sẽ tự tạo lại `local.properties`.
+
+**Nếu gặp `Supplied javaHome is not a valid folder`:**
+
+- Vào Android Studio → **Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK**.
+- Chọn **Embedded JDK (jbr)** hoặc JDK cài trên máy.
+- Android Studio sẽ tự ghi lại `android/.gradle/config.properties` theo đúng máy.
+- Nếu build bằng dòng lệnh, có thể set `JAVA_HOME` tạm thời:
+  ```bash
+  # macOS
+  export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+  # Windows (PowerShell)
+  $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+  ```
+
+Lưu ý: không copy `local.properties` hoặc `.gradle/config.properties` từ máy Windows sang Mac (hoặc ngược lại), vì đường dẫn sẽ sai.
 
 ### Phương án 1: Mở trực tiếp dự án Android Studio có sẵn (Khuyên dùng)
 Dự án đã có sẵn thư mục mã nguồn Android Native WebView tại thư mục `android/`:
@@ -71,13 +185,18 @@ Dự án đã tích hợp hoàn chỉnh Google Mobile Ads SDK (AdMob) trên Andr
   - Ad Unit ID: `ca-app-pub-1345063149639557/1736099863`
 - **Interstitial Ad:** Tự động kích hoạt hiển thị toàn màn hình sau khi có kết quả ván đấu (Thắng hoặc Thua).
   - Ad Unit ID: `ca-app-pub-1345063149639557/9583508131`
+- **Rewarded Ad:** Kích hoạt khi người chơi bấm nút **“NHẬN 1 ❤️ MIỄN PHÍ”** ở main menu. Xem xong được cộng 1 tim (tối đa 10); đóng quảng cáo sớm sẽ không được thưởng.
+  - Ad Unit ID: `ca-app-pub-1345063149639557/1159021967`
 - **Publisher ID:** `pub-1345063149639557`
+
+> Trên trình duyệt web không có AdMob native, nút Free Heart sẽ báo “Quảng cáo chỉ khả dụng trên ứng dụng Android” và không cộng tim. Trên app Android, quảng cáo được tải sẵn từ đầu và có thể xem để nhận thưởng.
 
 > **Lưu ý về AdMob App ID:**
 > Để ứng dụng hoạt động chính thức trên tài khoản AdMob của bạn:
 > 1. Mở file `android/app/src/main/res/values/strings.xml`.
 > 2. Thay `admob_app_id` bằng **App ID** từ AdMob Console (dạng `ca-app-pub-1345063149639557~XXXXXXXXXX`, có dấu ngã `~`).
 > 3. Trong quá trình phát triển & test thử nghiệm, bạn có thể chuyển `<bool name="use_test_ads">true</bool>` để dùng ID test an toàn của Google, tránh bị AdMob khoá tài khoản vì nhấp quảng cáo thật của mình. Khi chuẩn bị phát hành lên Google Play, đổi lại thành `false`.
+> 4. Bộ ID test tương ứng nằm trong `android/app/src/main/res/values/strings.xml`: Banner `admob_test_banner_id`, Interstitial `admob_test_interstitial_id`, Rewarded `admob_test_rewarded_id`.
 
 ### Phương án 2: Cài đặt dạng PWA (Không cần build APK)
 1. Đưa web lên bất kỳ hosting miễn phí nào (như Vercel, Netlify, GitHub Pages).
@@ -85,14 +204,22 @@ Dự án đã tích hợp hoàn chỉnh Google Mobile Ads SDK (AdMob) trên Andr
 3. Nhấn menu 3 chấm ở góc phải Chrome -> Chọn **"Thêm vào Màn hình chính" (Add to Home Screen)** hoặc **"Cài đặt ứng dụng"**.
 4. Game sẽ có icon ngoài màn hình chính, mở lên toàn màn hình (fullscreen không viền) y hệt một game Android độc lập!
 
-### Phương án 3: Sử dụng Capacitor
-Dự án đã có file `capacitor.config.json` và `package.json`. Bạn có thể dùng Capacitor:
+### Phương án 3: Sử dụng Capacitor (tùy chọn, KHÔNG phải luồng hiện tại)
+Dự án có sẵn file `capacitor.config.json` và một số script tên `android:*` trong `package.json`, nhưng **Android project hiện tại không dùng Capacitor**.
+
+Nếu muốn chuyển hẳn sang Capacitor, bạn sẽ phải:
 ```bash
 npm install @capacitor/core @capacitor/cli @capacitor/android
+npx cap init
 npx cap add android
-npx cap sync
+npx cap sync android
 npx cap open android
 ```
+
+Lưu ý:
+- Cần sửa lại cấu hình `webDir` cho đúng thư mục web (không dùng `.`), nếu không `cap sync` sẽ copy cả thư mục gốc.
+- Capacitor sẽ tạo Android shell mới, có thể **ghi đè/xung đột** với `MainActivity` native WebView + AdMob bridge hiện tại.
+- Vì vậy với project này, khuyến nghị giữ luồng `sync_assets.sh` + Gradle như mục quan trọng phía trên.
 
 ---
 
@@ -102,15 +229,15 @@ npx cap open android
 Flip Card Hero/
 ├── index.html              # Giao diện chính tối ưu Mobile Portrait
 ├── manifest.json           # Cấu hình PWA cài đặt trên Android
-├── package.json            # Scripts quản lý
-├── capacitor.config.json   # Cấu hình đóng gói Capacitor
-├── sync_assets.sh          # Script đồng bộ web vào Android app
+├── package.json            # Scripts tiện ích (không có build web)
+├── capacitor.config.json   # Cấu hình Capacitor (tùy chọn, không dùng cho Android hiện tại)
+├── sync_assets.sh          # Copy web vào Android assets (không build web)
 ├── css/
 │   └── style.css           # Hiệu ứng 3D lật bài, rung màn hình, giao diện bàn chơi
 ├── js/
 │   ├── audio.js            # Hệ thống âm thanh vỗ đập Web Audio API & Rung Haptic
 │   └── game.js             # Logic Gameplay Core, State Machine, AI Máy
 ├── icons/                  # Bộ icon chuẩn HD (192x192, 512x512)
-└── android/                # Dự án Android Studio hoàn chỉnh sẵn sàng build APK
+└── android/                # Android native WebView + AdMob, build bằng Gradle/Android Studio
 ```
 # FlipCardHero

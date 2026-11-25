@@ -1,0 +1,11 @@
+# Copy file này thành android/local.properties rồi bỏ comment dòng đúng với máy của bạn.
+# Android Studio cũng có thể tự tạo lại file này khi mở project.
+
+# macOS (thường dùng):
+# sdk.dir=/Users/<username>/Library/Android/sdk
+
+# Windows (nhớ escape dấu hai chấm và backslash):
+# sdk.dir=C\:\\Users\\<username>\\AppData\\Local\\Android\\Sdk
+
+# Linux:
+# sdk.dir=/home/<username>/Android/Sdk

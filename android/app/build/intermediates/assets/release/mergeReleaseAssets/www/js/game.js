@@ -3,8 +3,220 @@
  * Tối ưu hóa UI Fancy, Chibi Hero, Mobile Portrait & Android
  */
 
+// ========================================================
+// CẤU HÌNH HỆ THỐNG TIM
+// - Tối đa 10 tim
+// - Tự hồi 1 tim mỗi 30 phút (kể cả offline nhờ localStorage)
+// ========================================================
+const HEART_CONFIG = {
+    max: 10,
+    refillMs: 30 * 60 * 1000,
+    storageKey: 'flipCardHero_hearts',
+    lastRefillKey: 'flipCardHero_heartsLastRefill'
+};
+
+const BASE_SWEET_SPOT_WIDTH = 5;
+
+// ========================================================
+// CẤU HÌNH 3 BOSS
+// - Easy là mốc gốc hiện tại
+// - Medium khó hơn Easy 30% (×1.3)
+// - Hard khó hơn Medium 30% (×1.3) => ×1.69 so với Easy
+// Độ khó tác động: Robo canh chính xác hơn, cược thông minh hơn
+// và vùng vàng của người chơi hẹp lại tương ứng.
+// ========================================================
+const BOSS_LEVELS = {
+    easy: {
+        key: 'easy',
+        name: 'ROBO TẬP SỰ',
+        tier: 'EASY',
+        multiplier: 1,
+        heartSlots: 1,
+        botAimChance: 0.10,
+        botStakeAggression: 0.15,
+        sweetSpotWidth: BASE_SWEET_SPOT_WIDTH
+    },
+    medium: {
+        key: 'medium',
+        name: 'ROBO TITAN',
+        tier: 'MEDIUM',
+        multiplier: 1.3,
+        heartSlots: 2,
+        botAimChance: 0.13,
+        botStakeAggression: 0.45,
+        sweetSpotWidth: BASE_SWEET_SPOT_WIDTH / 1.3
+    },
+    hard: {
+        key: 'hard',
+        name: 'ROBO HỦY DIỆT',
+        tier: 'HARD',
+        multiplier: 1.69,
+        heartSlots: 3,
+        botAimChance: 0.169,
+        botStakeAggression: 0.80,
+        sweetSpotWidth: BASE_SWEET_SPOT_WIDTH / 1.69
+    }
+};
+
+/**
+ * Quản lý tim: lưu localStorage, hồi theo thời gian thực, hỗ trợ offline.
+ */
+class HeartManager {
+    constructor(options = {}) {
+        this.max = options.max || HEART_CONFIG.max;
+        this.refillMs = options.refillMs || HEART_CONFIG.refillMs;
+        this.onUpdate = options.onUpdate || null;
+
+        this.hearts = this.max;
+        this.lastRefillAt = Date.now();
+
+        this._load();
+        this._tickHandle = setInterval(() => this._tick(), 1000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) this.refresh();
+        });
+        window.addEventListener('focus', () => this.refresh());
+    }
+
+    _read(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    _write(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            // Bỏ qua nếu trình duyệt chặn localStorage
+        }
+    }
+
+    _load() {
+        const now = Date.now();
+        const savedHearts = parseInt(this._read(HEART_CONFIG.storageKey), 10);
+
+        this.hearts = Number.isFinite(savedHearts)
+            ? Math.max(0, Math.min(this.max, savedHearts))
+            : this.max;
+
+        let savedLast = parseInt(this._read(HEART_CONFIG.lastRefillKey), 10);
+        if (!Number.isFinite(savedLast) || savedLast <= 0) {
+            savedLast = now;
+        }
+        // Chống lỗi đổi giờ máy / dữ liệu tương lai
+        if (savedLast > now) savedLast = now;
+        this.lastRefillAt = savedLast;
+
+        this._applyRegen(now);
+        if (this.hearts >= this.max) {
+            this.lastRefillAt = now;
+        }
+
+        this._save();
+        this._emit();
+    }
+
+    _save() {
+        this._write(HEART_CONFIG.storageKey, String(this.hearts));
+        this._write(HEART_CONFIG.lastRefillKey, String(this.lastRefillAt));
+    }
+
+    _applyRegen(now) {
+        if (this.hearts >= this.max) {
+            this.lastRefillAt = now;
+            return 0;
+        }
+
+        const elapsed = Math.max(0, now - this.lastRefillAt);
+        const gained = Math.floor(elapsed / this.refillMs);
+        if (gained <= 0) return 0;
+
+        const before = this.hearts;
+        this.hearts = Math.min(this.max, this.hearts + gained);
+        this.lastRefillAt += gained * this.refillMs;
+        if (this.hearts >= this.max) {
+            this.lastRefillAt = now;
+        }
+        return this.hearts - before;
+    }
+
+    _emit() {
+        if (typeof this.onUpdate === 'function') {
+            this.onUpdate(this);
+        }
+    }
+
+    _tick() {
+        const before = this.hearts;
+        this._applyRegen(Date.now());
+        // Chỉ ghi localStorage khi tim thực sự thay đổi, tránh ghi mỗi giây
+        if (this.hearts !== before) {
+            this._save();
+        }
+        this._emit();
+    }
+
+    refresh() {
+        this._applyRegen(Date.now());
+        this._save();
+        this._emit();
+    }
+
+    getSecondsToNextHeart() {
+        if (this.hearts >= this.max) return 0;
+        const elapsed = Math.max(0, Date.now() - this.lastRefillAt);
+        return Math.max(0, Math.ceil((this.refillMs - elapsed) / 1000));
+    }
+
+    formatCountdown(seconds) {
+        const safe = Math.max(0, Math.floor(seconds));
+        const minutes = Math.floor(safe / 60);
+        const secs = safe % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    canAfford(amount = 1) {
+        this.refresh();
+        return this.hearts >= amount;
+    }
+
+    consume(amount = 1) {
+        this.refresh();
+        if (this.hearts < amount) return false;
+
+        const wasFull = this.hearts >= this.max;
+        this.hearts -= amount;
+        // Nếu đang đầy mà tiêu tim, bắt đầu tính giờ hồi từ lúc này
+        if (wasFull) this.lastRefillAt = Date.now();
+
+        this._save();
+        this._emit();
+        return true;
+    }
+
+    grant(amount = 1) {
+        this.refresh();
+        const before = this.hearts;
+        this.hearts = Math.min(this.max, this.hearts + amount);
+        if (this.hearts >= this.max) {
+            this.lastRefillAt = Date.now();
+        }
+        this._save();
+        this._emit();
+        return this.hearts - before;
+    }
+}
+
 class FlipCardGame {
     constructor() {
+        // Boss được chọn ở menu (mặc định Easy)
+        this.selectedBossKey = this.loadSelectedBossKey();
+        this.currentBoss = BOSS_LEVELS[this.selectedBossKey];
+
         // Player & Opponent state
         this.playerName = localStorage.getItem('flipCardHero_playerName') || 'LEO';
         this.playerCards = 10;
@@ -22,10 +234,10 @@ class FlipCardGame {
         this.isRoundInProgress = false;
         this.isGameEnded = false;
 
-        // Smash Bar & Sweet Spot (5%)
+        // Smash Bar & Sweet Spot (5% ở Easy, hẹp dần theo boss)
         this.pointerPos = 0; // 0 to 100%
         this.pointerDirection = 1; // 1: phải, -1: trái
-        this.sweetSpotWidth = 5; // Đúng 5% theo yêu cầu
+        this.sweetSpotWidth = BASE_SWEET_SPOT_WIDTH;
         this.sweetSpotStart = 50; // Vị trí ngẫu nhiên mỗi lượt
         this.isPointerMoving = false;
         this.animFrameId = null;
@@ -37,13 +249,52 @@ class FlipCardGame {
 
         // Bot simulation
         this.botSmashTimeout = null;
+        this.botAimCheckId = null;
+
+        // Hệ thống tim
+        this.heartManager = null;
+        this.freeHeartBusy = false;
+        this.menuToastTimer = null;
+        this.menuToastHideTimer = null;
+
+        // Vòng quay may mắn
+        this.wheelAvailable = false;
+        this.wheelUsed = false;
+        this.wheelSpinning = false;
+        this.wheelSlots = [];
+        this.wheelCellEls = [];
+        this.wheelSpinTimeout = null;
+
+        // Quảng cáo interstitial (chờ quay thưởng xong mới hiện)
+        this.interstitialTimer = null;
+        this.interstitialShown = false;
+
+        // Mỗi ván có một session id để bỏ qua các timeout cũ khi thoát/chơi lại
+        this.gameSessionId = 0;
 
         // Screen states
         this.currentScreen = 'splash';
 
         this.initDom();
+        this.heartManager = new HeartManager({
+            onUpdate: (manager) => this.onHeartsChanged(manager)
+        });
+        this.updateFreeHeartButton();
         this.bindEvents();
+        this.renderBossCards();
+        this.updateBossSelectionUI();
+        this.updatePlayerNameDisplays();
         this.startSplashScreen();
+    }
+
+    loadSelectedBossKey() {
+        try {
+            const saved = localStorage.getItem('flipCardHero_selectedBoss');
+            if (saved && BOSS_LEVELS[saved]) return saved;
+        } catch (e) {
+            // localStorage có thể bị chặn
+        }
+        return 'easy';
     }
 
     initDom() {
@@ -65,13 +316,30 @@ class FlipCardGame {
             rpsPlayerLabel: document.getElementById('rps-player-label'),
 
             // Main Menu Elements
-            btnPlayNow: document.getElementById('btn-play-now'),
+            bossSelectRow: document.getElementById('boss-select-row'),
+            btnBattle: document.getElementById('btn-battle'),
+            btnBattleText: document.getElementById('btn-battle-text'),
             btnHowToPlay: document.getElementById('btn-how-to-play'),
+            btnFreeHeart: document.getElementById('btn-free-heart'),
+            btnFreeHeartText: document.getElementById('btn-free-heart-text'),
+            menuToast: document.getElementById('menu-toast'),
             btnMenuSettings: document.getElementById('btn-menu-settings'),
+
+            // Hearts
+            menuHeartHud: document.getElementById('menu-heart-hud'),
+            heartCount: document.getElementById('heart-count'),
+            heartTimer: document.getElementById('heart-timer'),
+            gameHeartHud: document.getElementById('game-heart-hud'),
+            gameHeartCount: document.getElementById('game-heart-count'),
+            wheelHeartCount: document.getElementById('wheel-heart-count'),
+            noHeartsCountdown: document.getElementById('no-hearts-countdown'),
 
             // In-Game Header & Scoreboard
             btnExitToMenu: document.getElementById('btn-exit-to-menu'),
             roundBadge: document.getElementById('round-badge'),
+            gameBossTier: document.getElementById('game-boss-tier'),
+            gameBotHudName: document.getElementById('game-bot-hud-name'),
+            rpsBotLabel: document.getElementById('rps-bot-label'),
             btnSoundToggle: document.getElementById('btn-sound-toggle'),
             playerCardCount: document.getElementById('player-card-count'),
             botCardCount: document.getElementById('bot-card-count'),
@@ -99,6 +367,8 @@ class FlipCardGame {
             modalResult: document.getElementById('modal-result'),
             modalHowToPlay: document.getElementById('modal-how-to-play'),
             modalSettings: document.getElementById('modal-settings'),
+            modalWheel: document.getElementById('modal-wheel'),
+            modalNoHearts: document.getElementById('modal-no-hearts'),
 
             // RPS elements
             rpsPlayerChoice: document.getElementById('rps-player-choice'),
@@ -118,6 +388,20 @@ class FlipCardGame {
             resultScoreDetail: document.getElementById('result-score-detail'),
             btnPlayAgain: document.getElementById('btn-play-again'),
             btnResultHome: document.getElementById('btn-result-home'),
+            btnOpenWheel: document.getElementById('btn-open-wheel'),
+            wheelCtaReward: document.getElementById('wheel-cta-reward'),
+
+            // Lucky Wheel
+            wheelGrid: document.getElementById('wheel-grid'),
+            wheelSubtitle: document.getElementById('wheel-subtitle'),
+            wheelResult: document.getElementById('wheel-result'),
+            btnSpinWheel: document.getElementById('btn-spin-wheel'),
+            btnWheelContinue: document.getElementById('btn-wheel-continue'),
+            btnWheelBack: document.getElementById('btn-wheel-back'),
+
+            // No hearts modal
+            btnCloseNoHearts: document.getElementById('btn-close-no-hearts'),
+            btnNoHeartsClose: document.getElementById('btn-no-hearts-close'),
 
             // How to Play & Settings modal buttons
             btnCloseHow: document.getElementById('btn-close-how'),
@@ -191,16 +475,52 @@ class FlipCardGame {
             this.switchScreen('pick-name');
         });
 
-        // Chuyển màn hình từ Main Menu
-        this.dom.btnPlayNow.addEventListener('click', () => {
+        // Vào trận với boss đang chọn (tốn 1 tim)
+        this.dom.btnBattle.addEventListener('click', () => {
             window.soundManager.playClick();
-            this.switchScreen('game');
-            this.startNewGame();
+            this.tryStartBattle();
+        });
+
+        // Vòng quay may mắn
+        this.dom.btnOpenWheel.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.openWheel();
+        });
+
+        this.dom.btnSpinWheel.addEventListener('click', () => {
+            this.spinWheel();
+        });
+
+        this.dom.btnWheelContinue.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.closeWheelToResult();
+        });
+
+        this.dom.btnWheelBack.addEventListener('click', () => {
+            if (this.wheelSpinning) return;
+            window.soundManager.playClick();
+            this.closeWheelToResult();
+        });
+
+        // Modal hết tim
+        this.dom.btnCloseNoHearts.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.hideModals();
+        });
+
+        this.dom.btnNoHeartsClose.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.hideModals();
         });
 
         this.dom.btnHowToPlay.addEventListener('click', () => {
             window.soundManager.playClick();
             this.showModal(this.dom.modalHowToPlay);
+        });
+
+        this.dom.btnFreeHeart.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.watchRewardedAdForHeart();
         });
 
         this.dom.btnMenuSettings.addEventListener('click', () => {
@@ -250,8 +570,11 @@ class FlipCardGame {
             window.soundManager.playClick();
             this.stopPointerMovement();
             if (this.botSmashTimeout) clearTimeout(this.botSmashTimeout);
+            if (this.botAimCheckId) cancelAnimationFrame(this.botAimCheckId);
+            this.isGameEnded = true;
             this.hideModals();
             this.switchScreen('main-menu');
+            this.heartManager.refresh();
         });
 
         // Nút về menu từ màn hình kết quả
@@ -259,12 +582,24 @@ class FlipCardGame {
             window.soundManager.playClick();
             this.hideModals();
             this.switchScreen('main-menu');
+            this.heartManager.refresh();
         });
 
-        // Nút chơi lại từ màn hình kết quả
+        // Nút chơi lại từ màn hình kết quả (tốn thêm 1 tim)
         this.dom.btnPlayAgain.addEventListener('click', () => {
             window.soundManager.playClick();
             this.hideModals();
+            if (this.interstitialTimer) {
+                clearTimeout(this.interstitialTimer);
+                this.interstitialTimer = null;
+            }
+
+            if (!this.heartManager.consume(1)) {
+                this.switchScreen('main-menu');
+                this.showNoHeartsModal();
+                return;
+            }
+
             this.startNewGame();
         });
 
@@ -310,6 +645,240 @@ class FlipCardGame {
                 this.handlePlayerRpsChoice(choice);
             });
         });
+    }
+
+    // ========================================================
+    // HỆ THỐNG TIM & CHỌN BOSS
+    // ========================================================
+
+    onHeartsChanged(manager) {
+        const hearts = manager.hearts;
+        const max = manager.max;
+        const countdown = manager.formatCountdown(manager.getSecondsToNextHeart());
+        const timerText = hearts >= max ? 'ĐẦY' : countdown;
+
+        if (this.dom.heartCount) this.dom.heartCount.textContent = hearts;
+        if (this.dom.heartTimer) this.dom.heartTimer.textContent = timerText;
+        if (this.dom.gameHeartCount) this.dom.gameHeartCount.textContent = hearts;
+        if (this.dom.wheelHeartCount) this.dom.wheelHeartCount.textContent = hearts;
+        if (this.dom.noHeartsCountdown) this.dom.noHeartsCountdown.textContent = countdown;
+
+        [this.dom.menuHeartHud, this.dom.gameHeartHud].forEach((hud) => {
+            if (!hud) return;
+            hud.classList.toggle('is-empty', hearts <= 0);
+        });
+
+        if (this.dom.btnBattle) {
+            this.dom.btnBattle.classList.toggle('is-out-of-hearts', hearts <= 0);
+        }
+
+        this.updateFreeHeartButton();
+    }
+
+    renderBossCards() {
+        if (!this.dom.bossSelectRow) return;
+        this.dom.bossSelectRow.innerHTML = '';
+
+        Object.values(BOSS_LEVELS).forEach((boss) => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'boss-card';
+            card.dataset.boss = boss.key;
+            card.setAttribute('aria-label', `Boss ${boss.tier} - ${boss.name}`);
+            card.innerHTML = `
+                <span class="boss-check">✓</span>
+                <span class="boss-tier ${boss.key}">${boss.tier}</span>
+                <span class="boss-avatar-ring">
+                    <img src="icons/hero-bot.svg" class="boss-avatar ${boss.key}" alt="${boss.name}">
+                </span>
+                <span class="boss-name">${boss.name}</span>
+            `;
+
+            card.addEventListener('click', () => {
+                window.soundManager.playClick();
+                this.selectBoss(boss.key);
+            });
+
+            this.dom.bossSelectRow.appendChild(card);
+        });
+    }
+
+    selectBoss(key) {
+        if (!BOSS_LEVELS[key]) return;
+        this.selectedBossKey = key;
+        this.currentBoss = BOSS_LEVELS[key];
+        try {
+            localStorage.setItem('flipCardHero_selectedBoss', key);
+        } catch (e) {
+            // Bỏ qua nếu localStorage bị chặn
+        }
+        this.updateBossSelectionUI();
+    }
+
+    updateBossSelectionUI() {
+        const boss = BOSS_LEVELS[this.selectedBossKey] || BOSS_LEVELS.easy;
+
+        document.querySelectorAll('.boss-card').forEach((card) => {
+            card.classList.toggle('selected', card.dataset.boss === boss.key);
+        });
+
+        if (this.dom.btnBattleText) {
+            this.dom.btnBattleText.textContent = `ĐẤU ${boss.name}`;
+        }
+
+        this.applyBossToHud();
+    }
+
+    applyBossToHud() {
+        const boss = this.currentBoss || BOSS_LEVELS[this.selectedBossKey] || BOSS_LEVELS.easy;
+
+        if (this.dom.gameBotHudName) {
+            this.dom.gameBotHudName.textContent = boss.name;
+        }
+        if (this.dom.gameBossTier) {
+            this.dom.gameBossTier.textContent = boss.tier;
+            this.dom.gameBossTier.className = `boss-tier-chip ${boss.key}`;
+        }
+        if (this.dom.rpsBotLabel) {
+            this.dom.rpsBotLabel.textContent = boss.tier === 'EASY' ? 'Robo' : boss.name;
+        }
+    }
+
+    tryStartBattle() {
+        if (this.currentScreen !== 'main-menu') return;
+
+        const boss = BOSS_LEVELS[this.selectedBossKey] || BOSS_LEVELS.easy;
+        this.currentBoss = boss;
+
+        if (!this.heartManager || !this.heartManager.consume(1)) {
+            this.showNoHeartsModal();
+            return;
+        }
+
+        this.wheelAvailable = false;
+        this.wheelUsed = false;
+        this.applyBossToHud();
+        this.switchScreen('game');
+        this.startNewGame();
+    }
+
+    showNoHeartsModal() {
+        if (this.currentScreen === 'game') {
+            this.stopPointerMovement();
+            if (this.botSmashTimeout) clearTimeout(this.botSmashTimeout);
+            if (this.botAimCheckId) cancelAnimationFrame(this.botAimCheckId);
+            this.isGameEnded = true;
+            this.hideModals();
+            this.switchScreen('main-menu');
+        }
+        this.heartManager.refresh();
+        this.showModal(this.dom.modalNoHearts);
+    }
+
+    scheduleInterstitial(delay = 1200) {
+        if (!window.adsManager || this.interstitialShown) return;
+
+        if (this.interstitialTimer) clearTimeout(this.interstitialTimer);
+        this.interstitialTimer = setTimeout(() => {
+            this.interstitialTimer = null;
+            if (this.interstitialShown) return;
+            this.interstitialShown = true;
+            window.adsManager.showInterstitial();
+        }, delay);
+    }
+
+    updateFreeHeartButton() {
+        if (!this.dom.btnFreeHeart || !this.heartManager) return;
+        if (this.freeHeartBusy) return;
+
+        const isFull = this.heartManager.hearts >= this.heartManager.max;
+        this.dom.btnFreeHeart.disabled = isFull;
+        this.dom.btnFreeHeart.classList.toggle('is-full', isFull);
+
+        if (this.dom.btnFreeHeartText) {
+            this.dom.btnFreeHeartText.textContent = isFull
+                ? '❤️ TIM ĐÃ ĐẦY'
+                : 'NHẬN 1 ❤️ MIỄN PHÍ';
+        }
+    }
+
+    setFreeHeartButtonLoading() {
+        if (!this.dom.btnFreeHeart) return;
+        this.dom.btnFreeHeart.disabled = true;
+        this.dom.btnFreeHeart.classList.remove('is-full');
+        if (this.dom.btnFreeHeartText) {
+            this.dom.btnFreeHeartText.textContent = '⏳ ĐANG TẢI QUẢNG CÁO...';
+        }
+    }
+
+    async watchRewardedAdForHeart() {
+        if (this.freeHeartBusy) return;
+
+        if (!this.heartManager) return;
+
+        if (this.heartManager.hearts >= this.heartManager.max) {
+            this.showMenuToast('❤️ Tim đã đầy rồi!', 'info');
+            return;
+        }
+
+        if (!window.adsManager || typeof window.adsManager.showRewardedAd !== 'function') {
+            this.showMenuToast('📱 Quảng cáo chỉ khả dụng trên ứng dụng Android.', 'error');
+            return;
+        }
+
+        this.freeHeartBusy = true;
+        this.setFreeHeartButtonLoading();
+
+        let status = 'failed';
+        try {
+            status = await window.adsManager.showRewardedAd();
+        } catch (e) {
+            console.error('[FreeHeart] Lỗi khi xem quảng cáo:', e);
+            status = 'failed';
+        }
+
+        this.freeHeartBusy = false;
+
+        if (status === 'rewarded') {
+            const added = this.heartManager.grant(1);
+            this.showMenuToast(
+                added > 0
+                    ? '🎉 +1 ❤️! Tim đã được cộng.'
+                    : '❤️ Tim đã đầy rồi!',
+                added > 0 ? 'success' : 'info'
+            );
+        } else if (status === 'unavailable') {
+            this.showMenuToast('📱 Quảng cáo chỉ khả dụng trên ứng dụng Android.', 'error');
+        } else if (status === 'closed') {
+            this.showMenuToast('⏹️ Bạn cần xem hết quảng cáo để nhận tim.', 'info');
+        } else if (status === 'timeout') {
+            this.showMenuToast('⏳ Quảng cáo mất quá lâu. Thử lại sau nhé!', 'error');
+        } else {
+            this.showMenuToast('😢 Chưa có quảng cáo phù hợp. Thử lại sau nhé!', 'error');
+        }
+
+        this.updateFreeHeartButton();
+    }
+
+    showMenuToast(message, type = 'info') {
+        if (!this.dom.menuToast) return;
+
+        if (this.menuToastTimer) clearTimeout(this.menuToastTimer);
+        if (this.menuToastHideTimer) clearTimeout(this.menuToastHideTimer);
+
+        const toast = this.dom.menuToast;
+        toast.textContent = message;
+        toast.className = `menu-toast ${type}`;
+        toast.classList.remove('hidden');
+        void toast.offsetWidth;
+        toast.classList.add('show');
+
+        this.menuToastTimer = setTimeout(() => {
+            toast.classList.remove('show');
+            this.menuToastHideTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 220);
+        }, 2800);
     }
 
     confirmPlayerName() {
@@ -404,12 +973,41 @@ class FlipCardGame {
 
     startNewGame() {
         this.updatePlayerNameDisplays();
+
+        // Vô hiệu hoá mọi timeout của ván cũ
+        this.gameSessionId += 1;
+
+        this.currentBoss = BOSS_LEVELS[this.selectedBossKey] || BOSS_LEVELS.easy;
+        this.sweetSpotWidth = this.currentBoss.sweetSpotWidth;
+
         this.playerCards = 10;
         this.botCards = 10;
         this.currentRound = 1;
         this.lastRoundWinner = null;
         this.isGameEnded = false;
+        this.wheelAvailable = false;
+        this.wheelUsed = false;
+        this.wheelSpinning = false;
+        this.interstitialShown = false;
 
+        if (this.interstitialTimer) {
+            clearTimeout(this.interstitialTimer);
+            this.interstitialTimer = null;
+        }
+        if (this.wheelSpinTimeout) {
+            clearTimeout(this.wheelSpinTimeout);
+            this.wheelSpinTimeout = null;
+        }
+        if (this.botAimCheckId) {
+            cancelAnimationFrame(this.botAimCheckId);
+            this.botAimCheckId = null;
+        }
+        if (this.botSmashTimeout) {
+            clearTimeout(this.botSmashTimeout);
+            this.botSmashTimeout = null;
+        }
+
+        this.applyBossToHud();
         this.updateScoreboard();
         this.renderDecks();
         this.startRound(1);
@@ -435,6 +1033,8 @@ class FlipCardGame {
     // ========================================================
 
     startRound(roundNumber) {
+        if (this.currentScreen !== 'game' || this.isGameEnded) return;
+
         this.currentRound = roundNumber;
         this.updateScoreboard();
         this.isRoundInProgress = true;
@@ -517,6 +1117,9 @@ class FlipCardGame {
         this.dom.rpsButtons.forEach(b => b.disabled = true);
         window.soundManager.playClick();
 
+        const sessionId = this.gameSessionId;
+        const isSessionValid = () => sessionId === this.gameSessionId && this.currentScreen === 'game';
+
         const choices = ['rock', 'paper', 'scissors'];
         const emojiMap = { rock: '✊', paper: '✋', scissors: '✌️' };
 
@@ -529,6 +1132,8 @@ class FlipCardGame {
         }, 300);
 
         setTimeout(() => {
+            if (!isSessionValid()) return;
+
             window.soundManager.playRpsCountdown(660);
             const botChoice = choices[Math.floor(Math.random() * choices.length)];
             this.dom.rpsBotChoice.textContent = emojiMap[botChoice];
@@ -549,6 +1154,7 @@ class FlipCardGame {
             if (rpsResult === 'draw') {
                 this.dom.rpsStatus.innerHTML = '<span style="color:#d97706">HÒA NHAU! Oẳn tù tì lại nào!</span>';
                 setTimeout(() => {
+                    if (!isSessionValid()) return;
                     this.dom.rpsPlayerChoice.textContent = '❓';
                     this.dom.rpsBotChoice.textContent = '❓';
                     this.dom.rpsButtons.forEach(b => b.disabled = false);
@@ -557,6 +1163,7 @@ class FlipCardGame {
                 this.dom.rpsStatus.innerHTML = '<span style="color:#16a34a">BẠN THẮNG! BẠN ĐƯỢC ĐẬP TRƯỚC! 🔥</span>';
                 this.activeSmasher = 'player';
                 setTimeout(() => {
+                    if (!isSessionValid()) return;
                     this.hideModals();
                     this.startSmashPhase();
                 }, 1300);
@@ -564,6 +1171,7 @@ class FlipCardGame {
                 this.dom.rpsStatus.innerHTML = '<span style="color:#dc2626">ROBO THẮNG! ROBO ĐƯỢC ĐẬP TRƯỚC! 🤖</span>';
                 this.activeSmasher = 'bot';
                 setTimeout(() => {
+                    if (!isSessionValid()) return;
                     this.hideModals();
                     this.startSmashPhase();
                 }, 1300);
@@ -603,20 +1211,43 @@ class FlipCardGame {
             }
         } else {
             // Máy thắng hiệp trước
+            const bossName = this.currentBoss ? this.currentBoss.name : 'ROBO';
             this.activeSmasher = 'bot';
-            this.dom.stakePromptText.innerHTML = `🤖 <b>ROBO THẮNG HIỆP TRƯỚC!</b><br>Robo sẽ được đập trước và đang chọn số lá cược...`;
+            this.dom.stakePromptText.innerHTML = `🤖 <b>${bossName} THẮNG HIỆP TRƯỚC!</b><br>${bossName} sẽ được đập trước và đang chọn số lá cược...`;
             this.dom.stakeBotNotice.classList.remove('hidden');
 
+            const sessionId = this.gameSessionId;
+            const isSessionValid = () => sessionId === this.gameSessionId && this.currentScreen === 'game';
+
             setTimeout(() => {
-                const botStake = Math.floor(Math.random() * (maxStake - minStake + 1)) + minStake;
-                this.dom.stakePromptText.innerHTML = `🤖 <b>ROBO ĐÃ CHỌN CƯỢC ${botStake} LÁ!</b>`;
+                if (!isSessionValid()) return;
+
+                const botStake = this.chooseBotStake(minStake, maxStake);
+                this.dom.stakePromptText.innerHTML = `🤖 <b>${bossName} ĐÃ CHỌN CƯỢC ${botStake} LÁ!</b>`;
                 window.soundManager.playRpsCountdown(500);
 
                 setTimeout(() => {
+                    if (!isSessionValid()) return;
                     this.confirmStake(botStake);
                 }, 900);
             }, 1200);
         }
+    }
+
+    /**
+     * Boss càng khó càng có xu hướng cược lớn (vì Robo canh chính xác hơn).
+     */
+    chooseBotStake(minStake, maxStake) {
+        const boss = this.currentBoss || BOSS_LEVELS.easy;
+        const aggression = boss.botStakeAggression || 0;
+
+        if (Math.random() < aggression) {
+            return Math.random() < 0.75
+                ? maxStake
+                : Math.max(minStake, maxStake - 1);
+        }
+
+        return Math.floor(Math.random() * (maxStake - minStake + 1)) + minStake;
     }
 
     confirmStake(stakeAmount) {
@@ -627,15 +1258,18 @@ class FlipCardGame {
     }
 
     // ========================================================
-    // PHASE: SMASH PHASE (CANH THANH LỰC 5%)
+    // PHASE: SMASH PHASE (CANH THANH LỰC)
     // ========================================================
 
     startSmashPhase() {
+        if (this.currentScreen !== 'game' || this.isGameEnded) return;
+
         this.dom.smashBarContainer.classList.remove('disabled');
         this.renderPotCards(false);
 
-        // Đặt vùng 5% ngẫu nhiên trên thanh (từ 15% đến 80%)
-        this.sweetSpotStart = Math.floor(Math.random() * 66) + 15;
+        // Vùng vàng hẹp dần theo độ khó boss (Easy 5%, Medium ~3.85%, Hard ~2.96%)
+        const startRange = Math.max(1, Math.floor(85 - this.sweetSpotWidth - 15));
+        this.sweetSpotStart = Math.floor(Math.random() * (startRange + 1)) + 15;
         this.dom.sweetSpot.style.left = `${this.sweetSpotStart}%`;
         this.dom.sweetSpot.style.width = `${this.sweetSpotWidth}%`;
 
@@ -655,7 +1289,7 @@ class FlipCardGame {
             this.dom.btnSmash.disabled = true;
             this.dom.btnSmash.classList.add('bot-turn');
             this.dom.btnSmash.textContent = '🤖 ROBO ĐANG CANH ĐẬP...';
-            this.dom.arenaMessage.textContent = 'Robo Titan đang canh nhịp con trỏ...';
+            this.dom.arenaMessage.textContent = `${this.currentBoss.name} đang canh nhịp con trỏ...`;
 
             this.scheduleBotSmash();
         }
@@ -683,6 +1317,10 @@ class FlipCardGame {
         if (this.animFrameId) {
             cancelAnimationFrame(this.animFrameId);
             this.animFrameId = null;
+        }
+        if (this.botAimCheckId) {
+            cancelAnimationFrame(this.botAimCheckId);
+            this.botAimCheckId = null;
         }
     }
 
@@ -714,14 +1352,48 @@ class FlipCardGame {
     scheduleBotSmash() {
         if (this.botSmashTimeout) clearTimeout(this.botSmashTimeout);
 
-        // Robo bấm ngẫu nhiên theo thời gian
-        const randomDelay = Math.floor(Math.random() * 1200) + 850;
+        const boss = this.currentBoss || BOSS_LEVELS.easy;
+        const shouldAim = Math.random() < (boss.botAimChance || 0);
+
+        // Boss khó có tỉ lệ "canh trúng" vùng vàng cao hơn.
+        // Khi trượt canh, Robo đập ngẫu nhiên như cũ.
+        const delay = shouldAim
+            ? Math.floor(Math.random() * 350) + 750
+            : Math.floor(Math.random() * 1200) + 850;
 
         this.botSmashTimeout = setTimeout(() => {
-            if (this.activeSmasher === 'bot' && this.isPointerMoving) {
+            if (this.activeSmasher !== 'bot' || !this.isPointerMoving) return;
+
+            if (shouldAim) {
+                this.botAimForSweetSpot();
+            } else {
                 this.executeSmash('bot');
             }
-        }, randomDelay);
+        }, delay);
+    }
+
+    botAimForSweetSpot() {
+        if (this.botAimCheckId) cancelAnimationFrame(this.botAimCheckId);
+
+        const check = () => {
+            if (this.activeSmasher !== 'bot' || !this.isPointerMoving) {
+                this.botAimCheckId = null;
+                return;
+            }
+
+            if (
+                this.pointerPos >= this.sweetSpotStart &&
+                this.pointerPos <= (this.sweetSpotStart + this.sweetSpotWidth)
+            ) {
+                this.botAimCheckId = null;
+                this.executeSmash('bot');
+                return;
+            }
+
+            this.botAimCheckId = requestAnimationFrame(check);
+        };
+
+        this.botAimCheckId = requestAnimationFrame(check);
     }
 
     // ========================================================
@@ -766,15 +1438,19 @@ class FlipCardGame {
         this.renderPotCards(true); // Lật ngửa mặt trước
         this.dom.potCardStack.classList.add('flipping-success');
 
+        const bossName = this.currentBoss ? this.currentBoss.name : 'ROBO';
         this.showToast(
-            smasher === 'player' ? '🔥 BẠN ĐÃ LẬT BÀI THÀNH CÔNG!' : '🤖 ROBO ĐÃ LẬT BÀI THÀNH CÔNG!',
+            smasher === 'player' ? '🔥 BẠN ĐÃ LẬT BÀI THÀNH CÔNG!' : `🤖 ${bossName} ĐÃ LẬT BÀI THÀNH CÔNG!`,
             'success'
         );
 
         const wonCards = this.potCards;
+        const sessionId = this.gameSessionId;
         this.lastRoundWinner = smasher;
 
         setTimeout(() => {
+            if (sessionId !== this.gameSessionId || this.currentScreen !== 'game') return;
+
             if (smasher === 'player') {
                 this.playerCards += wonCards;
             } else {
@@ -802,13 +1478,17 @@ class FlipCardGame {
             this.dom.potCardStack.classList.remove('shivering-miss');
         }, 400);
 
+        const bossName = this.currentBoss ? this.currentBoss.name : 'ROBO';
         this.showToast(
-            smasher === 'player' ? '💨 ĐẬP HỤT! Chuyển lượt sang ROBO!' : '💨 ROBO ĐẬP HỤT! Chuyển lượt sang BẠN!',
+            smasher === 'player' ? `💨 ĐẬP HỤT! Chuyển lượt sang ${bossName}!` : `💨 ${bossName} ĐẬP HỤT! Chuyển lượt sang BẠN!`,
             'miss'
         );
 
+        const sessionId = this.gameSessionId;
+
         // Chuyển lượt
         setTimeout(() => {
+            if (sessionId !== this.gameSessionId || this.currentScreen !== 'game' || this.isGameEnded) return;
             this.activeSmasher = (smasher === 'player') ? 'bot' : 'player';
             this.startSmashPhase();
         }, 1200);
@@ -855,16 +1535,20 @@ class FlipCardGame {
 
         // 3. Nếu chưa kết thúc, chuyển sang hiệp tiếp theo
         const nextRound = this.currentRound + 1;
+        const sessionId = this.gameSessionId;
         this.showToast(`Chuẩn bị bắt đầu Hiệp ${nextRound}...`, 'info');
         setTimeout(() => {
+            if (sessionId !== this.gameSessionId || this.currentScreen !== 'game' || this.isGameEnded) return;
             this.startRound(nextRound);
         }, 1500);
     }
 
     endGame(reason) {
+        if (this.isGameEnded) return;
         this.isGameEnded = true;
         this.stopPointerMovement();
         if (this.botSmashTimeout) clearTimeout(this.botSmashTimeout);
+        if (this.botAimCheckId) cancelAnimationFrame(this.botAimCheckId);
 
         this.showModal(this.dom.modalResult);
 
@@ -873,11 +1557,13 @@ class FlipCardGame {
 
         this.dom.resultTitle.className = 'modal-title result-headline';
 
+        const bossName = this.currentBoss ? this.currentBoss.name : 'ROBO';
+
         if (reason === 'player_knockout') {
             isPlayerWin = true;
             this.dom.resultTitle.textContent = 'YOU WON! 🏆';
             this.dom.resultTitle.classList.add('win-text');
-            this.dom.resultSubtitle.textContent = 'BẠN ĐÃ HỐT SẠCH BÀI CỦA ROBO (KNOCKOUT)!';
+            this.dom.resultSubtitle.textContent = `BẠN ĐÃ HỐT SẠCH BÀI CỦA ${bossName} (KNOCKOUT)!`;
             this.dom.resultHeroImg.src = 'icons/trophy-win.svg';
         } else if (reason === 'bot_knockout') {
             isPlayerWin = false;
@@ -897,13 +1583,27 @@ class FlipCardGame {
                 isPlayerWin = false;
                 this.dom.resultTitle.textContent = 'YOU LOST! 💀';
                 this.dom.resultTitle.classList.add('lose-text');
-                this.dom.resultSubtitle.textContent = `Robo Titan đã sở hữu nhiều bài hơn sau 5 hiệp!`;
+                this.dom.resultSubtitle.textContent = `${bossName} đã sở hữu nhiều bài hơn sau 5 hiệp!`;
                 this.dom.resultHeroImg.src = 'icons/lose-cry.svg';
             } else {
                 isDraw = true;
                 this.dom.resultTitle.textContent = 'DRAW! 🤝';
                 this.dom.resultSubtitle.textContent = `Cả hai bên đều sở hữu đúng 10 lá bài!`;
                 this.dom.resultHeroImg.src = 'icons/trophy-win.svg';
+            }
+        }
+
+        // Chỉ khi THẮNG mới được 1 lượt quay may mắn
+        this.wheelAvailable = isPlayerWin;
+        this.wheelUsed = false;
+        if (this.dom.btnOpenWheel) {
+            this.dom.btnOpenWheel.classList.toggle('hidden', !isPlayerWin);
+            this.dom.btnOpenWheel.disabled = false;
+        }
+        if (isPlayerWin) {
+            this.dom.resultSubtitle.textContent += ' Bạn nhận được 1 lượt quay may mắn! 🎡';
+            if (this.dom.wheelCtaReward) {
+                this.dom.wheelCtaReward.textContent = `×${this.currentBoss.heartSlots} ❤️`;
             }
         }
 
@@ -915,7 +1615,7 @@ class FlipCardGame {
                 </div>
                 <div class="hud-center-vs" style="font-size: 20px; color: #ef4444;">VS</div>
                 <div class="side-score bot">
-                    <span>🤖 ROBO</span>
+                    <span>🤖 ${bossName}</span>
                     <strong>${this.botCards} LÁ</strong>
                 </div>
             </div>
@@ -929,13 +1629,219 @@ class FlipCardGame {
         }
 
         // ========================================================
-        // GOOGLE ADMOB: Hiển thị Interstitial sau khi có kết quả ván đấu (Thắng hoặc Thua)
-        // Độ trễ 1.2s giúp người chơi kịp nhìn thấy kết quả và lắng nghe âm thanh chiến thắng / thất bại
+        // GOOGLE ADMOB: Interstitial sau kết quả.
+        // Nếu thắng, chờ người chơi quay thưởng xong mới hiện để không che vòng quay.
         // ========================================================
-        if (window.adsManager) {
-            setTimeout(() => {
-                window.adsManager.showInterstitial();
-            }, 1200);
+        if (!isPlayerWin) {
+            this.scheduleInterstitial(1200);
+        }
+    }
+
+    // ========================================================
+    // VÒNG QUAY MAY MẮN 9 Ô (CHỈ SAU KHI THẮNG)
+    // ========================================================
+
+    buildWheel() {
+        if (!this.dom.wheelGrid) return;
+
+        const boss = this.currentBoss || BOSS_LEVELS.easy;
+        const heartCount = Math.max(0, Math.min(9, boss.heartSlots));
+
+        this.dom.wheelGrid.innerHTML = '';
+
+        // Chọn ngẫu nhiên vị trí các ô tim
+        const indices = Array.from({ length: 9 }, (_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        const heartSet = new Set(indices.slice(0, heartCount));
+
+        this.wheelSlots = [];
+        this.wheelCellEls = [];
+
+        for (let i = 0; i < 9; i++) {
+            const isHeart = heartSet.has(i);
+            this.wheelSlots.push(isHeart ? 'heart' : 'empty');
+
+            const cell = document.createElement('div');
+            // Úp mặt mọi ô để người chơi không biết tim nằm ở đâu
+            cell.className = 'wheel-cell mystery';
+            cell.dataset.index = i;
+            cell.innerHTML = '<span class="wheel-cell-icon">?</span>';
+            cell.setAttribute('aria-label', 'Ô chưa mở');
+
+            this.dom.wheelGrid.appendChild(cell);
+            this.wheelCellEls.push(cell);
+        }
+
+        if (this.dom.wheelSubtitle) {
+            this.dom.wheelSubtitle.innerHTML = `<b>${boss.tier}</b> • ${boss.name}`;
+        }
+        if (this.dom.wheelResult) {
+            this.dom.wheelResult.textContent = '🍀 Chạm QUAY để thử vận may!';
+            this.dom.wheelResult.className = 'wheel-result';
+        }
+        if (this.dom.btnSpinWheel) {
+            this.dom.btnSpinWheel.disabled = false;
+            this.dom.btnSpinWheel.classList.remove('hidden');
+        }
+        if (this.dom.btnWheelContinue) {
+            this.dom.btnWheelContinue.classList.add('hidden');
+        }
+        if (this.dom.btnWheelBack) {
+            this.dom.btnWheelBack.disabled = false;
+        }
+
+        this.wheelUsed = false;
+        this.wheelSpinning = false;
+    }
+
+    openWheel() {
+        if (!this.wheelAvailable || this.wheelUsed || this.wheelSpinning) return;
+
+        this.buildWheel();
+
+        if (this.dom.wheelHeartCount && this.heartManager) {
+            this.dom.wheelHeartCount.textContent = this.heartManager.hearts;
+        }
+
+        this.showModal(this.dom.modalWheel);
+    }
+
+    spinWheel() {
+        if (!this.wheelAvailable || this.wheelUsed || this.wheelSpinning) return;
+        if (!this.wheelSlots.length || !this.wheelCellEls.length) return;
+
+        this.wheelSpinning = true;
+
+        if (this.dom.btnSpinWheel) this.dom.btnSpinWheel.disabled = true;
+        if (this.dom.btnWheelContinue) this.dom.btnWheelContinue.classList.add('hidden');
+        if (this.dom.btnWheelBack) this.dom.btnWheelBack.disabled = true;
+        if (this.dom.wheelResult) {
+            this.dom.wheelResult.textContent = '🎡 Đang quay...';
+            this.dom.wheelResult.className = 'wheel-result';
+        }
+
+        this.wheelCellEls.forEach((cell) => {
+            cell.classList.remove('is-active', 'is-picked');
+        });
+
+        // Kết quả ngẫu nhiên đều cho 9 ô (tỉ lệ trúng tim = số ô tim / 9)
+        const targetIndex = Math.floor(Math.random() * 9);
+        const totalSteps = 26 + targetIndex;
+        const startIndex = ((targetIndex - (totalSteps - 1)) % 9 + 9) % 9;
+
+        let step = 0;
+
+        const tick = () => {
+            if (step >= totalSteps) {
+                this.finalizeWheel(targetIndex);
+                return;
+            }
+
+            const activeIndex = (startIndex + step) % 9;
+            this.wheelCellEls.forEach((cell, i) => {
+                cell.classList.toggle('is-active', i === activeIndex);
+            });
+
+            if (step % 2 === 0 || step > totalSteps - 6) {
+                window.soundManager.playRpsCountdown(520 + Math.min(step * 12, 320));
+            }
+
+            step++;
+            const progress = step / totalSteps;
+            const delay = 55 + Math.pow(progress, 2.4) * 260;
+            this.wheelSpinTimeout = setTimeout(tick, delay);
+        };
+
+        tick();
+    }
+
+    revealWheelCell(index, cells = this.wheelCellEls, slots = this.wheelSlots) {
+        const cell = cells[index];
+        if (!cell) return;
+
+        const isHeart = slots[index] === 'heart';
+        cell.classList.remove('mystery');
+        cell.classList.add('revealed');
+        cell.classList.add(isHeart ? 'heart' : 'empty');
+        cell.innerHTML = isHeart
+            ? '<span class="wheel-cell-icon">❤️</span>'
+            : '<span class="wheel-cell-icon">✖</span>';
+        cell.setAttribute('aria-label', isHeart ? 'Ô tim' : 'Ô trống');
+    }
+
+    finalizeWheel(targetIndex) {
+        this.wheelSpinning = false;
+        this.wheelUsed = true;
+
+        if (this.wheelSpinTimeout) {
+            clearTimeout(this.wheelSpinTimeout);
+            this.wheelSpinTimeout = null;
+        }
+        if (this.dom.btnWheelBack) this.dom.btnWheelBack.disabled = false;
+
+        // Chụp lại danh sách ô của lượt quay này để timeout không ảnh hưởng lượt sau
+        const cells = this.wheelCellEls.slice();
+        const slots = this.wheelSlots.slice();
+
+        const cell = cells[targetIndex];
+        if (cell) {
+            cell.classList.remove('is-active');
+            cell.classList.add('is-picked');
+        }
+
+        // Lật ô trúng trước, sau đó lật các ô còn lại để lộ vị trí tim
+        this.revealWheelCell(targetIndex, cells, slots);
+        cells.forEach((_, idx) => {
+            if (idx === targetIndex) return;
+            setTimeout(() => this.revealWheelCell(idx, cells, slots), 260 + idx * 55);
+        });
+
+        const isHeart = slots[targetIndex] === 'heart';
+
+        if (isHeart) {
+            const added = this.heartManager.grant(1);
+
+            if (this.dom.wheelResult) {
+                this.dom.wheelResult.className = 'wheel-result win';
+                this.dom.wheelResult.innerHTML = added > 0
+                    ? '🎉 TRÚNG THƯỞNG! +1 ❤️'
+                    : '🎉 TRÚNG Ô TIM! Nhưng tim đã đầy rồi.';
+            }
+
+            if (cell) cell.classList.add('is-heart-win');
+            window.soundManager.playVictory();
+            this.launchConfetti();
+        } else {
+            if (this.dom.wheelResult) {
+                this.dom.wheelResult.className = 'wheel-result miss';
+                this.dom.wheelResult.textContent = '😢 Ô trống! Chúc bạn may mắn lần sau!';
+            }
+            window.soundManager.playMissWhoosh();
+        }
+
+        if (this.dom.wheelHeartCount && this.heartManager) {
+            this.dom.wheelHeartCount.textContent = this.heartManager.hearts;
+        }
+
+        if (this.dom.btnSpinWheel) this.dom.btnSpinWheel.classList.add('hidden');
+        if (this.dom.btnWheelContinue) this.dom.btnWheelContinue.classList.remove('hidden');
+        if (this.dom.btnOpenWheel) this.dom.btnOpenWheel.classList.add('hidden');
+    }
+
+    closeWheelToResult() {
+        if (this.wheelSpinning) return;
+
+        this.hideModals();
+        if (this.dom.modalResult) {
+            this.showModal(this.dom.modalResult);
+        }
+
+        // Interstitial sau khi đã nhận thưởng xong
+        if (this.wheelUsed) {
+            this.scheduleInterstitial(300);
         }
     }
 
@@ -968,7 +1874,9 @@ class FlipCardGame {
             this.dom.modalStake,
             this.dom.modalResult,
             this.dom.modalHowToPlay,
-            this.dom.modalSettings
+            this.dom.modalSettings,
+            this.dom.modalWheel,
+            this.dom.modalNoHearts
         ].forEach(m => m.classList.add('hidden'));
         modalElement.classList.remove('hidden');
     }
@@ -980,7 +1888,9 @@ class FlipCardGame {
             this.dom.modalStake,
             this.dom.modalResult,
             this.dom.modalHowToPlay,
-            this.dom.modalSettings
+            this.dom.modalSettings,
+            this.dom.modalWheel,
+            this.dom.modalNoHearts
         ].forEach(m => m.classList.add('hidden'));
     }
 }

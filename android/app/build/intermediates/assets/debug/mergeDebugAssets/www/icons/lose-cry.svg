@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <radialGradient id="sadGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="100" cy="100" r="85" fill="url(#sadGlow)"/>
+
+  <!-- Sad Chibi Head -->
+  <ellipse cx="100" cy="105" rx="55" ry="50" fill="#ffedd5" stroke="#ea580c" stroke-width="3"/>
+
+  <!-- Dizzy Swirl Eyes -->
+  <!-- Left Eye -->
+  <path d="M72,100 Q80,92 88,100 Q92,108 82,112 Q72,110 75,102" fill="none" stroke="#0369a1" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Right Eye -->
+  <path d="M112,100 Q120,92 128,100 Q132,108 122,112 Q112,110 115,102" fill="none" stroke="#0369a1" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Comic Waterfall Tears -->
+  <path d="M68,108 C64,125 60,145 62,160" stroke="#38bdf8" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M132,108 C136,125 140,145 138,160" stroke="#38bdf8" stroke-width="7" stroke-linecap="round" fill="none"/>
+
+  <!-- Sad Wavy Mouth -->
+  <path d="M88,135 Q94,128 100,135 Q106,142 112,135" stroke="#b91c1c" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- Dizzy Stars Overhead -->
+  <polygon points="50,45 54,54 64,55 56,62 58,72 50,66 42,72 44,62 36,55 46,54" fill="#fbbf24"/>
+  <polygon points="150,45 154,54 164,55 156,62 158,72 150,66 142,72 144,62 136,55 146,54" fill="#fbbf24"/>
+  <path d="M55,58 Q100,25 145,58" stroke="#facc15" stroke-width="2" stroke-dasharray="4,4" fill="none"/>
+</svg>

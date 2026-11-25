@@ -29,10 +29,14 @@ import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.OnUserEarnedRewardListener;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.ads.rewarded.RewardItem;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 
 public class MainActivity extends Activity {
     private static final String TAG = "FlipCardHero_AdMob";
@@ -41,6 +45,11 @@ public class MainActivity extends Activity {
     private AdView adView;
     private InterstitialAd mInterstitialAd;
     private boolean isInterstitialLoading = false;
+
+    private RewardedAd mRewardedAd;
+    private boolean isRewardedLoading = false;
+    private boolean isRewardedShowing = false;
+    private boolean pendingRewardedShow = false;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -130,7 +139,7 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Khởi tạo AdMob SDK, tải Banner và tải trước Interstitial Ad
+     * Khởi tạo AdMob SDK, tải Banner, Interstitial và Rewarded Ad
      */
     private void initAdMob() {
         try {
@@ -143,6 +152,7 @@ public class MainActivity extends Activity {
                         public void run() {
                             loadBannerAd();
                             loadInterstitialAd();
+                            loadRewardedAd();
                         }
                     });
                 }
@@ -255,6 +265,140 @@ public class MainActivity extends Activity {
     }
 
     /**
+     * Tải trước Rewarded Ad (quảng cáo xem để nhận tim)
+     */
+    private void loadRewardedAd() {
+        if (mRewardedAd != null || isRewardedLoading) {
+            return;
+        }
+
+        try {
+            isRewardedLoading = true;
+            AdRequest adRequest = new AdRequest.Builder().build();
+
+            RewardedAd.load(this, getRewardedAdUnitId(), adRequest, new RewardedAdLoadCallback() {
+                @Override
+                public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
+                    mRewardedAd = rewardedAd;
+                    isRewardedLoading = false;
+                    Log.i(TAG, "Rewarded AdMob đã tải xong và sẵn sàng hiển thị");
+
+                    mRewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                        @Override
+                        public void onAdDismissedFullScreenContent() {
+                            Log.i(TAG, "Người dùng đã đóng Rewarded Ad");
+                            mRewardedAd = null;
+                            isRewardedShowing = false;
+                            safeHideSystemUI();
+                            notifyRewardedAdEvent("closed");
+                            loadRewardedAd();
+                        }
+
+                        @Override
+                        public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                            Log.e(TAG, "Không thể hiển thị Rewarded Ad: " + adError.getMessage());
+                            mRewardedAd = null;
+                            isRewardedShowing = false;
+                            safeHideSystemUI();
+                            notifyRewardedAdEvent("failed");
+                            loadRewardedAd();
+                        }
+
+                        @Override
+                        public void onAdShowedFullScreenContent() {
+                            Log.i(TAG, "Rewarded AdMob đang hiển thị toàn màn hình");
+                            notifyRewardedAdEvent("shown");
+                        }
+                    });
+
+                    if (pendingRewardedShow) {
+                        pendingRewardedShow = false;
+                        showRewardedAdInternal();
+                    }
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                    Log.w(TAG, "Rewarded tải thất bại: " + loadAdError.getMessage() + " (Code: " + loadAdError.getCode() + ")");
+                    mRewardedAd = null;
+                    isRewardedLoading = false;
+                    pendingRewardedShow = false;
+                    notifyRewardedAdEvent("failed");
+                }
+            });
+        } catch (Throwable t) {
+            Log.e(TAG, "Lỗi khi gọi loadRewardedAd", t);
+            isRewardedLoading = false;
+            pendingRewardedShow = false;
+            notifyRewardedAdEvent("failed");
+        }
+    }
+
+    /**
+     * Hiển thị Rewarded Ad. Nếu chưa tải xong, chờ tải xong rồi tự hiển thị.
+     */
+    public void showRewardedAd() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (isRewardedShowing) {
+                    Log.w(TAG, "Rewarded Ad đang hiển thị, bỏ qua yêu cầu mới");
+                    return;
+                }
+
+                if (mRewardedAd == null) {
+                    pendingRewardedShow = true;
+                    notifyRewardedAdEvent("loading");
+                    if (!isRewardedLoading) {
+                        loadRewardedAd();
+                    }
+                    return;
+                }
+
+                showRewardedAdInternal();
+            }
+        });
+    }
+
+    private void showRewardedAdInternal() {
+        if (mRewardedAd == null || isRewardedShowing) {
+            return;
+        }
+
+        try {
+            isRewardedShowing = true;
+            mRewardedAd.show(this, new OnUserEarnedRewardListener() {
+                @Override
+                public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
+                    Log.i(TAG, "Người dùng đã xem xong Rewarded Ad: " + rewardItem.getAmount() + " " + rewardItem.getType());
+                    notifyRewardedAdEvent("rewarded");
+                }
+            });
+        } catch (Throwable t) {
+            Log.e(TAG, "Lỗi khi hiển thị Rewarded Ad", t);
+            mRewardedAd = null;
+            isRewardedShowing = false;
+            pendingRewardedShow = false;
+            safeHideSystemUI();
+            notifyRewardedAdEvent("failed");
+            loadRewardedAd();
+        }
+    }
+
+    private void notifyRewardedAdEvent(final String event) {
+        if (webView == null) return;
+        webView.post(new Runnable() {
+            @Override
+            public void run() {
+                webView.evaluateJavascript(
+                    "window.onRewardedAdEvent && window.onRewardedAdEvent('" + event + "');",
+                    null
+                );
+            }
+        });
+    }
+
+    /**
      * Tính toán kích thước Adaptive Banner phù hợp với độ rộng màn hình
      */
     private AdSize getAdaptiveBannerSize() {
@@ -278,6 +422,11 @@ public class MainActivity extends Activity {
         return useTest ? getString(R.string.admob_test_interstitial_id) : getString(R.string.admob_interstitial_id);
     }
 
+    private String getRewardedAdUnitId() {
+        boolean useTest = getResources().getBoolean(R.bool.use_test_ads);
+        return useTest ? getString(R.string.admob_test_rewarded_id) : getString(R.string.admob_rewarded_id);
+    }
+
     /**
      * Cầu nối JavaScript Interface để gọi từ frontend
      */
@@ -291,6 +440,17 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isInterstitialReady() {
             return mInterstitialAd != null;
+        }
+
+        @JavascriptInterface
+        public void showRewardedAd() {
+            Log.d(TAG, "Gọi showRewardedAd() từ mã JavaScript");
+            MainActivity.this.showRewardedAd();
+        }
+
+        @JavascriptInterface
+        public boolean isRewardedAdReady() {
+            return mRewardedAd != null;
         }
 
         @JavascriptInterface
