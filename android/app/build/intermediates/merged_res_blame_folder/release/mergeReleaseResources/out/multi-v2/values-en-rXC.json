@@ -1,10 +1,20 @@
 {
     "logs": [
         {
-            "outputFile": "com.flipcardhero.game.app-mergeReleaseResources-15:/values-en-rXC/values-en-rXC.xml",
+            "outputFile": "com.flipcardhero.game.app-mergeReleaseResources-25:/values-en-rXC/values-en-rXC.xml",
             "map": [
                 {
-                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/4de448384e6aa8fb942baa40e8339a48/transformed/core-1.8.0/res/values-en-rXC/values-en-rXC.xml",
+                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/375f3f6fe7d76c8086cccf40c1198621/transformed/credentials-1.2.0-rc01/res/values-en-rXC/values-en-rXC.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,270",
+                        "endColumns": "214,215",
+                        "endOffsets": "265,481"
+                    }
+                },
+                {
+                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/0af05c5b0c94a7b64baf51980c755c22/transformed/core-1.9.0/res/values-en-rXC/values-en-rXC.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -13,21 +23,28 @@
                         "endOffsets": "254"
                     },
                     "to": {
-                        "startLines": "6",
+                        "startLines": "8",
                         "startColumns": "4",
-                        "startOffsets": "867",
+                        "startOffsets": "1298",
                         "endColumns": "203",
-                        "endOffsets": "1066"
+                        "endOffsets": "1497"
                     }
                 },
                 {
-                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/9b78df61070da9286b64bc1d2757dd46/transformed/browser-1.8.0/res/values-en-rXC/values-en-rXC.xml",
+                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/de422f6c5b51916518b61848c1c9451c/transformed/browser-1.8.0/res/values-en-rXC/values-en-rXC.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",
                         "startOffsets": "55,255,454,665",
                         "endColumns": "199,198,210,201",
                         "endOffsets": "250,449,660,862"
+                    },
+                    "to": {
+                        "startLines": "4,5,6,7",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "486,686,885,1096",
+                        "endColumns": "199,198,210,201",
+                        "endOffsets": "681,880,1091,1293"
                     }
                 }
             ]

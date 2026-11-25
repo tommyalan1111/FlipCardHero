@@ -6,7 +6,7 @@
     mergedManifest="build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml"
     proguardFiles="build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-9.4.1:proguard-rules.pro"
     partialResultsDir="build/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out"
-    desugaredMethodsFiles="/Users/Amuro/.gradle/caches/9.6.0/transforms/49e936ec76ce8b581a8de9662ed4f404/transformed/D8BackportedDesugaredMethods.txt">
+    desugaredMethodsFiles="/Users/Amuro/.gradle/caches/9.6.0/transforms/505b564486ceabcb5e0db5ec646e40de/transformed/D8BackportedDesugaredMethods.txt">
   <buildFeatures/>
   <sourceProviders>
     <sourceProvider
@@ -25,6 +25,7 @@
       type="MAIN"
       applicationId="com.flipcardhero.game"
       generatedSourceFolders="build/generated/ap_generated_sources/release/out"
-      desugaredMethodsFiles="/Users/Amuro/.gradle/caches/9.6.0/transforms/49e936ec76ce8b581a8de9662ed4f404/transformed/D8BackportedDesugaredMethods.txt">
+      generatedResourceFolders="build/generated/res/processReleaseGoogleServices"
+      desugaredMethodsFiles="/Users/Amuro/.gradle/caches/9.6.0/transforms/505b564486ceabcb5e0db5ec646e40de/transformed/D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

@@ -28,7 +28,8 @@ const BASE_SWEET_SPOT_WIDTH = 5;
 const BOSS_LEVELS = {
     easy: {
         key: 'easy',
-        name: 'ROBO TẬP SỰ',
+        nameKey: 'boss.easy',
+        get name() { return window.i18n ? window.i18n.t(this.nameKey) : this.nameKey; },
         tier: 'EASY',
         multiplier: 1,
         heartSlots: 1,
@@ -38,7 +39,8 @@ const BOSS_LEVELS = {
     },
     medium: {
         key: 'medium',
-        name: 'ROBO TITAN',
+        nameKey: 'boss.medium',
+        get name() { return window.i18n ? window.i18n.t(this.nameKey) : this.nameKey; },
         tier: 'MEDIUM',
         multiplier: 1.3,
         heartSlots: 2,
@@ -48,7 +50,8 @@ const BOSS_LEVELS = {
     },
     hard: {
         key: 'hard',
-        name: 'ROBO HỦY DIỆT',
+        nameKey: 'boss.hard',
+        get name() { return window.i18n ? window.i18n.t(this.nameKey) : this.nameKey; },
         tier: 'HARD',
         multiplier: 1.69,
         heartSlots: 3,
@@ -218,7 +221,9 @@ class FlipCardGame {
         this.currentBoss = BOSS_LEVELS[this.selectedBossKey];
 
         // Player & Opponent state
-        this.playerName = localStorage.getItem('flipCardHero_playerName') || 'LEO';
+        this.playerName = (localStorage.getItem('flipCardHero_playerName') || 'LEO').toUpperCase();
+        this.playerStats = this.loadPlayerStats();
+        this.leaderboardData = null;
         this.playerCards = 10;
         this.botCards = 10;
         this.currentRound = 1;
@@ -265,8 +270,7 @@ class FlipCardGame {
         this.wheelCellEls = [];
         this.wheelSpinTimeout = null;
 
-        // Quảng cáo interstitial (chờ quay thưởng xong mới hiện)
-        this.interstitialTimer = null;
+        // Quảng cáo interstitial
         this.interstitialShown = false;
 
         // Mỗi ván có một session id để bỏ qua các timeout cũ khi thoát/chơi lại
@@ -281,6 +285,7 @@ class FlipCardGame {
         });
         this.updateFreeHeartButton();
         this.bindEvents();
+        document.addEventListener('languagechange', () => this.onLanguageChanged());
         this.renderBossCards();
         this.updateBossSelectionUI();
         this.updatePlayerNameDisplays();
@@ -295,6 +300,27 @@ class FlipCardGame {
             // localStorage có thể bị chặn
         }
         return 'easy';
+    }
+
+    t(key, params) {
+        return window.i18n ? window.i18n.t(key, params) : key;
+    }
+
+    onLanguageChanged() {
+        // i18n đã cập nhật các nhãn tĩnh; refresh các phần do game render
+        this.updatePlayerNameDisplays();
+        this.renderBossCards();
+        this.updateBossSelectionUI();
+        this.updateScoreboard();
+        this.updateHeartUi();
+        this.updateFreeHeartButton();
+        this.updateTurnIndicator();
+        this.dom.arenaMessage.textContent = this.t('game.arenaHint');
+    }
+
+    updateHeartUi() {
+        if (!this.heartManager) return;
+        this.onHeartsChanged(this.heartManager);
     }
 
     initDom() {
@@ -322,6 +348,7 @@ class FlipCardGame {
             btnHowToPlay: document.getElementById('btn-how-to-play'),
             btnFreeHeart: document.getElementById('btn-free-heart'),
             btnFreeHeartText: document.getElementById('btn-free-heart-text'),
+            btnLeaderboard: document.getElementById('btn-leaderboard'),
             menuToast: document.getElementById('menu-toast'),
             btnMenuSettings: document.getElementById('btn-menu-settings'),
 
@@ -369,6 +396,11 @@ class FlipCardGame {
             modalSettings: document.getElementById('modal-settings'),
             modalWheel: document.getElementById('modal-wheel'),
             modalNoHearts: document.getElementById('modal-no-hearts'),
+            modalLeaderboard: document.getElementById('modal-leaderboard'),
+            leaderboardMyScore: document.getElementById('leaderboard-my-score'),
+            leaderboardList: document.getElementById('leaderboard-list'),
+            btnCloseLeaderboard: document.getElementById('btn-close-leaderboard'),
+            btnRefreshLeaderboard: document.getElementById('btn-refresh-leaderboard'),
 
             // RPS elements
             rpsPlayerChoice: document.getElementById('rps-player-choice'),
@@ -393,7 +425,6 @@ class FlipCardGame {
 
             // Lucky Wheel
             wheelGrid: document.getElementById('wheel-grid'),
-            wheelSubtitle: document.getElementById('wheel-subtitle'),
             wheelResult: document.getElementById('wheel-result'),
             btnSpinWheel: document.getElementById('btn-spin-wheel'),
             btnWheelContinue: document.getElementById('btn-wheel-continue'),
@@ -416,7 +447,7 @@ class FlipCardGame {
         const handleNameInput = () => {
             let val = this.dom.inputHeroName.value;
             // Loại bỏ hoàn toàn ký tự lạ và khoảng trắng ngay lập tức
-            const sanitized = val.replace(/[^a-zA-Z0-9]/g, '');
+            const sanitized = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             if (val !== sanitized) {
                 this.dom.inputHeroName.value = sanitized;
                 val = sanitized;
@@ -425,7 +456,7 @@ class FlipCardGame {
             this.dom.charCounter.textContent = `${val.length}/9`;
 
             if (val.length === 0) {
-                this.dom.nameValidationMsg.textContent = 'ℹ️ Từ 3 đến 9 ký tự, chỉ gồm chữ cái và số.';
+                this.dom.nameValidationMsg.textContent = this.t('name.info');
                 this.dom.nameValidationMsg.className = 'validation-msg';
                 this.dom.inputHeroName.className = 'custom-name-input';
                 this.dom.btnConfirmName.disabled = true;
@@ -433,7 +464,7 @@ class FlipCardGame {
             }
 
             if (val.length < 3) {
-                this.dom.nameValidationMsg.textContent = '❌ Tên quá ngắn! Phải từ 3 ký tự trở lên (> 2).';
+                this.dom.nameValidationMsg.textContent = this.t('name.tooShort');
                 this.dom.nameValidationMsg.className = 'validation-msg error';
                 this.dom.inputHeroName.className = 'custom-name-input is-invalid';
                 this.dom.btnConfirmName.disabled = true;
@@ -441,7 +472,7 @@ class FlipCardGame {
             }
 
             if (val.length > 9) {
-                this.dom.nameValidationMsg.textContent = '❌ Tên quá dài! Tối đa 9 ký tự (< 10).';
+                this.dom.nameValidationMsg.textContent = this.t('name.tooLong');
                 this.dom.nameValidationMsg.className = 'validation-msg error';
                 this.dom.inputHeroName.className = 'custom-name-input is-invalid';
                 this.dom.btnConfirmName.disabled = true;
@@ -449,7 +480,7 @@ class FlipCardGame {
             }
 
             // Hợp lệ
-            this.dom.nameValidationMsg.textContent = '✅ Tên hợp lệ! Sẵn sàng vào đấu trường!';
+            this.dom.nameValidationMsg.textContent = this.t('name.valid');
             this.dom.nameValidationMsg.className = 'validation-msg valid';
             this.dom.inputHeroName.className = 'custom-name-input is-valid';
             this.dom.btnConfirmName.disabled = false;
@@ -523,6 +554,21 @@ class FlipCardGame {
             this.watchRewardedAdForHeart();
         });
 
+        this.dom.btnLeaderboard.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.openLeaderboard();
+        });
+
+        this.dom.btnCloseLeaderboard.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.hideModals();
+        });
+
+        this.dom.btnRefreshLeaderboard.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.fetchLeaderboard();
+        });
+
         this.dom.btnMenuSettings.addEventListener('click', () => {
             window.soundManager.playClick();
             this.showModal(this.dom.modalSettings);
@@ -589,11 +635,6 @@ class FlipCardGame {
         this.dom.btnPlayAgain.addEventListener('click', () => {
             window.soundManager.playClick();
             this.hideModals();
-            if (this.interstitialTimer) {
-                clearTimeout(this.interstitialTimer);
-                this.interstitialTimer = null;
-            }
-
             if (!this.heartManager.consume(1)) {
                 this.switchScreen('main-menu');
                 this.showNoHeartsModal();
@@ -655,7 +696,7 @@ class FlipCardGame {
         const hearts = manager.hearts;
         const max = manager.max;
         const countdown = manager.formatCountdown(manager.getSecondsToNextHeart());
-        const timerText = hearts >= max ? 'ĐẦY' : countdown;
+        const timerText = hearts >= max ? this.t('common.full') : countdown;
 
         if (this.dom.heartCount) this.dom.heartCount.textContent = hearts;
         if (this.dom.heartTimer) this.dom.heartTimer.textContent = timerText;
@@ -723,7 +764,7 @@ class FlipCardGame {
         });
 
         if (this.dom.btnBattleText) {
-            this.dom.btnBattleText.textContent = `ĐẤU ${boss.name}`;
+            this.dom.btnBattleText.textContent = this.t('menu.battle', { boss: boss.name });
         }
 
         this.applyBossToHud();
@@ -740,7 +781,7 @@ class FlipCardGame {
             this.dom.gameBossTier.className = `boss-tier-chip ${boss.key}`;
         }
         if (this.dom.rpsBotLabel) {
-            this.dom.rpsBotLabel.textContent = boss.tier === 'EASY' ? 'Robo' : boss.name;
+            this.dom.rpsBotLabel.textContent = boss.tier === 'EASY' ? this.t('rps.robot') : boss.name;
         }
     }
 
@@ -775,16 +816,11 @@ class FlipCardGame {
         this.showModal(this.dom.modalNoHearts);
     }
 
-    scheduleInterstitial(delay = 1200) {
+    showResultInterstitial() {
         if (!window.adsManager || this.interstitialShown) return;
 
-        if (this.interstitialTimer) clearTimeout(this.interstitialTimer);
-        this.interstitialTimer = setTimeout(() => {
-            this.interstitialTimer = null;
-            if (this.interstitialShown) return;
-            this.interstitialShown = true;
-            window.adsManager.showInterstitial();
-        }, delay);
+        this.interstitialShown = true;
+        window.adsManager.showInterstitial();
     }
 
     updateFreeHeartButton() {
@@ -797,8 +833,8 @@ class FlipCardGame {
 
         if (this.dom.btnFreeHeartText) {
             this.dom.btnFreeHeartText.textContent = isFull
-                ? '❤️ TIM ĐÃ ĐẦY'
-                : 'NHẬN 1 ❤️ MIỄN PHÍ';
+                ? this.t('menu.freeHeartFull')
+                : this.t('menu.freeHeart');
         }
     }
 
@@ -807,7 +843,7 @@ class FlipCardGame {
         this.dom.btnFreeHeart.disabled = true;
         this.dom.btnFreeHeart.classList.remove('is-full');
         if (this.dom.btnFreeHeartText) {
-            this.dom.btnFreeHeartText.textContent = '⏳ ĐANG TẢI QUẢNG CÁO...';
+            this.dom.btnFreeHeartText.textContent = this.t('freeHeart.loading');
         }
     }
 
@@ -817,12 +853,12 @@ class FlipCardGame {
         if (!this.heartManager) return;
 
         if (this.heartManager.hearts >= this.heartManager.max) {
-            this.showMenuToast('❤️ Tim đã đầy rồi!', 'info');
+            this.showMenuToast(this.t('freeHeart.full'), 'info');
             return;
         }
 
         if (!window.adsManager || typeof window.adsManager.showRewardedAd !== 'function') {
-            this.showMenuToast('📱 Quảng cáo chỉ khả dụng trên ứng dụng Android.', 'error');
+            this.showMenuToast(this.t('freeHeart.adOnly'), 'error');
             return;
         }
 
@@ -843,18 +879,18 @@ class FlipCardGame {
             const added = this.heartManager.grant(1);
             this.showMenuToast(
                 added > 0
-                    ? '🎉 +1 ❤️! Tim đã được cộng.'
-                    : '❤️ Tim đã đầy rồi!',
+                    ? this.t('freeHeart.success')
+                    : this.t('freeHeart.full'),
                 added > 0 ? 'success' : 'info'
             );
         } else if (status === 'unavailable') {
-            this.showMenuToast('📱 Quảng cáo chỉ khả dụng trên ứng dụng Android.', 'error');
+            this.showMenuToast(this.t('freeHeart.adOnly'), 'error');
         } else if (status === 'closed') {
-            this.showMenuToast('⏹️ Bạn cần xem hết quảng cáo để nhận tim.', 'info');
+            this.showMenuToast(this.t('freeHeart.watched'), 'info');
         } else if (status === 'timeout') {
-            this.showMenuToast('⏳ Quảng cáo mất quá lâu. Thử lại sau nhé!', 'error');
+            this.showMenuToast(this.t('freeHeart.timeout'), 'error');
         } else {
-            this.showMenuToast('😢 Chưa có quảng cáo phù hợp. Thử lại sau nhé!', 'error');
+            this.showMenuToast(this.t('freeHeart.noAd'), 'error');
         }
 
         this.updateFreeHeartButton();
@@ -881,12 +917,243 @@ class FlipCardGame {
         }, 2800);
     }
 
+    // ========================================================
+    // BẢNG XẾP HẠNG (FIREBASE - NATIVE ANDROID)
+    // ========================================================
+
+    loadPlayerStats() {
+        const defaults = { easyWins: 0, mediumWins: 0, hardWins: 0 };
+
+        try {
+            const raw = localStorage.getItem('flipCardHero_stats');
+            if (!raw) return defaults;
+
+            const data = JSON.parse(raw);
+            return {
+                easyWins: Math.max(0, parseInt(data.easyWins, 10) || 0),
+                mediumWins: Math.max(0, parseInt(data.mediumWins, 10) || 0),
+                hardWins: Math.max(0, parseInt(data.hardWins, 10) || 0)
+            };
+        } catch (e) {
+            return defaults;
+        }
+    }
+
+    savePlayerStats() {
+        try {
+            localStorage.setItem('flipCardHero_stats', JSON.stringify(this.playerStats));
+        } catch (e) {
+            // Bỏ qua nếu localStorage bị chặn
+        }
+    }
+
+    getTotalWins() {
+        return (this.playerStats.easyWins || 0)
+            + (this.playerStats.mediumWins || 0)
+            + (this.playerStats.hardWins || 0);
+    }
+
+    getBestBoss() {
+        if (this.playerStats.hardWins > 0) return 3;
+        if (this.playerStats.mediumWins > 0) return 2;
+        if (this.playerStats.easyWins > 0) return 1;
+        return 0;
+    }
+
+    getLeaderboardScore() {
+        return (this.playerStats.easyWins || 0) * 1
+            + (this.playerStats.mediumWins || 0) * 2
+            + (this.playerStats.hardWins || 0) * 3;
+    }
+
+    submitCurrentScore() {
+        if (!window.leaderboardManager || typeof window.leaderboardManager.submitScore !== 'function') {
+            return false;
+        }
+
+        return window.leaderboardManager.submitScore({
+            name: this.playerName,
+            score: this.getLeaderboardScore(),
+            easyWins: this.playerStats.easyWins || 0,
+            mediumWins: this.playerStats.mediumWins || 0,
+            hardWins: this.playerStats.hardWins || 0,
+            bestBoss: this.getBestBoss()
+        });
+    }
+
+    recordWinForLeaderboard() {
+        if (!this.currentBoss) return;
+
+        const key = this.currentBoss.key;
+        if (key !== 'easy' && key !== 'medium' && key !== 'hard') return;
+
+        const field = `${key}Wins`;
+        this.playerStats[field] = (this.playerStats[field] || 0) + 1;
+        this.savePlayerStats();
+        this.submitCurrentScore();
+    }
+
+    openLeaderboard() {
+        this.updateLeaderboardPreview(null);
+        this.renderLeaderboardState(this.t('leaderboard.loading'), false);
+        this.showModal(this.dom.modalLeaderboard);
+
+        // Cập nhật tên / điểm mới nhất trước khi tải bảng
+        if (this.getTotalWins() > 0) {
+            this.submitCurrentScore();
+        }
+
+        this.fetchLeaderboard();
+    }
+
+    fetchLeaderboard() {
+        this.renderLeaderboardState(this.t('leaderboard.loading'), false);
+
+        if (!window.leaderboardManager || !window.leaderboardManager.isAvailable()) {
+            this.renderLeaderboardState(
+                this.t('leaderboard.unavailable'),
+                true
+            );
+            return;
+        }
+
+        window.leaderboardManager.setHandlers({
+            onData: (data) => {
+                this.leaderboardData = data;
+                this.renderLeaderboard(data);
+            },
+            onError: (message) => {
+                if (message === 'unavailable') {
+                    this.renderLeaderboardState(
+                        this.t('leaderboard.unavailable'),
+                        true
+                    );
+                } else if (message === 'timeout') {
+                    this.renderLeaderboardState(this.t('leaderboard.timeout'), true);
+                } else {
+                    this.renderLeaderboardState(
+                        this.t('leaderboard.error'),
+                        true
+                    );
+                }
+                this.updateLeaderboardPreview(null);
+            }
+        });
+
+        window.leaderboardManager.startUpdates();
+    }
+
+    updateLeaderboardPreview(rank) {
+        if (!this.dom.leaderboardMyScore) return;
+
+        const box = this.dom.leaderboardMyScore;
+        box.innerHTML = '';
+
+        const info = document.createElement('div');
+        info.className = 'leaderboard-me-info';
+
+        const nameLine = document.createElement('span');
+        nameLine.textContent = this.t('leaderboard.youLine', { name: this.playerName.toUpperCase(), wins: this.getTotalWins() });
+
+        const rankLine = document.createElement('span');
+        rankLine.className = 'leaderboard-my-rank';
+        if (typeof rank === 'number' && rank > 0) {
+            rankLine.textContent = rank > 50
+                ? this.t('leaderboard.rankOutside', { rank })
+                : this.t('leaderboard.rank', { rank });
+            if (rank > 50) rankLine.classList.add('outside');
+        } else if (rank === 0) {
+            rankLine.textContent = this.t('leaderboard.unranked');
+        } else {
+            rankLine.textContent = this.t('leaderboard.loadingRank');
+        }
+
+        info.appendChild(nameLine);
+        info.appendChild(rankLine);
+
+        const right = document.createElement('strong');
+        right.textContent = this.t('leaderboard.points', { count: this.getLeaderboardScore() });
+
+        box.appendChild(info);
+        box.appendChild(right);
+    }
+
+    renderLeaderboardState(message, isError) {
+        if (!this.dom.leaderboardList) return;
+
+        const list = this.dom.leaderboardList;
+        list.innerHTML = '';
+
+        const state = document.createElement('div');
+        state.className = `leaderboard-state${isError ? ' error' : ''}`;
+        state.textContent = message;
+        list.appendChild(state);
+    }
+
+    renderLeaderboard(data) {
+        if (!this.dom.leaderboardList) return;
+
+        const list = this.dom.leaderboardList;
+        const entries = data && Array.isArray(data.entries) ? data.entries : [];
+        const myUid = data && data.myUid ? data.myUid : '';
+        const myRank = data && typeof data.myRank === 'number' ? data.myRank : 0;
+
+        this.updateLeaderboardPreview(myRank);
+        list.innerHTML = '';
+
+        if (entries.length === 0) {
+            this.renderLeaderboardState(this.t('leaderboard.empty'), false);
+            return;
+        }
+
+        entries.forEach((entry, index) => {
+            const row = document.createElement('div');
+            row.className = 'leaderboard-row';
+            if (index < 3) row.classList.add(`top-${index + 1}`);
+            if (myUid && entry.uid === myUid) row.classList.add('is-me');
+
+            const rank = document.createElement('span');
+            rank.className = 'leaderboard-rank';
+            rank.textContent = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : String(index + 1);
+
+            const info = document.createElement('div');
+            info.style.minWidth = '0';
+
+            const name = document.createElement('div');
+            name.className = 'leaderboard-name';
+            name.textContent = String(entry.name || 'PLAYER').toUpperCase();
+
+            const meta = document.createElement('div');
+            meta.className = 'leaderboard-meta';
+            const totalWins = (entry.easyWins || 0) + (entry.mediumWins || 0) + (entry.hardWins || 0);
+            meta.textContent = this.t('leaderboard.wins', { count: totalWins });
+
+            info.appendChild(name);
+            info.appendChild(meta);
+
+            const score = document.createElement('span');
+            score.className = 'leaderboard-score';
+            score.textContent = String(entry.score || 0);
+            const unit = document.createElement('small');
+            unit.textContent = this.t('leaderboard.pointsUnit');
+            score.appendChild(unit);
+
+            row.appendChild(rank);
+            row.appendChild(info);
+            row.appendChild(score);
+            list.appendChild(row);
+        });
+    }
+
     confirmPlayerName() {
         const val = this.dom.inputHeroName.value.trim();
         if (val.length >= 3 && val.length <= 9 && /^[a-zA-Z0-9]+$/.test(val)) {
-            this.playerName = val;
+            this.playerName = val.toUpperCase();
             localStorage.setItem('flipCardHero_playerName', this.playerName);
             this.updatePlayerNameDisplays();
+            if (this.getTotalWins() > 0) {
+                this.submitCurrentScore();
+            }
             this.switchScreen('main-menu');
         }
     }
@@ -894,7 +1161,7 @@ class FlipCardGame {
     updatePlayerNameDisplays() {
         const upper = this.playerName.toUpperCase();
         if (this.dom.menuPlayerNameTag) {
-            this.dom.menuPlayerNameTag.textContent = `${upper} (BẠN)`;
+            this.dom.menuPlayerNameTag.textContent = `${upper} (${this.t('game.you')})`;
         }
         if (this.dom.gamePlayerHudName) {
             this.dom.gamePlayerHudName.textContent = upper;
@@ -916,7 +1183,7 @@ class FlipCardGame {
             if (this.currentScreen === 'splash') {
                 const saved = localStorage.getItem('flipCardHero_playerName');
                 if (saved && saved.length >= 3 && saved.length <= 9) {
-                    this.playerName = saved;
+                    this.playerName = saved.toUpperCase();
                     this.updatePlayerNameDisplays();
                     this.switchScreen('main-menu');
                 } else {
@@ -929,7 +1196,7 @@ class FlipCardGame {
             if (this.currentScreen === 'splash') {
                 const saved = localStorage.getItem('flipCardHero_playerName');
                 if (saved && saved.length >= 3 && saved.length <= 9) {
-                    this.playerName = saved;
+                    this.playerName = saved.toUpperCase();
                     this.updatePlayerNameDisplays();
                     this.switchScreen('main-menu');
                 } else {
@@ -990,10 +1257,6 @@ class FlipCardGame {
         this.wheelSpinning = false;
         this.interstitialShown = false;
 
-        if (this.interstitialTimer) {
-            clearTimeout(this.interstitialTimer);
-            this.interstitialTimer = null;
-        }
         if (this.wheelSpinTimeout) {
             clearTimeout(this.wheelSpinTimeout);
             this.wheelSpinTimeout = null;
@@ -1020,7 +1283,7 @@ class FlipCardGame {
 
         this.dom.playerCardCount.textContent = this.playerCards;
         this.dom.botCardCount.textContent = this.botCards;
-        this.dom.roundBadge.textContent = `HIỆP ${this.currentRound} / ${this.maxRounds}`;
+        this.dom.roundBadge.textContent = this.t('game.round', { round: this.currentRound, max: this.maxRounds });
     }
 
     renderDecks() {
@@ -1086,7 +1349,7 @@ class FlipCardGame {
 
     renderPotCards(isFaceUp = false) {
         this.dom.potCardStack.innerHTML = '';
-        this.dom.potCountBadge.textContent = `${this.potCards} lá trên sàn`;
+        this.dom.potCountBadge.textContent = this.t('game.pot', { count: this.potCards });
 
         const displayCount = Math.min(this.potCards, 10);
         for (let i = 0; i < displayCount; i++) {
@@ -1109,7 +1372,7 @@ class FlipCardGame {
         this.showModal(this.dom.modalRps);
         this.dom.rpsPlayerChoice.textContent = '❓';
         this.dom.rpsBotChoice.textContent = '❓';
-        this.dom.rpsStatus.textContent = 'Oẳn tù tì để quyết định bên nào được đập trước ở Hiệp 1!';
+        this.dom.rpsStatus.textContent = this.t('rps.desc');
         this.dom.rpsButtons.forEach(b => b.disabled = false);
     }
 
@@ -1124,7 +1387,7 @@ class FlipCardGame {
         const emojiMap = { rock: '✊', paper: '✋', scissors: '✌️' };
 
         this.dom.rpsPlayerChoice.textContent = emojiMap[playerChoice];
-        this.dom.rpsStatus.textContent = 'Oẳn tù tì... ra cái gì ra cái này!';
+        this.dom.rpsStatus.textContent = this.t('rps.pick');
         window.soundManager.playRpsCountdown(400);
 
         setTimeout(() => {
@@ -1152,7 +1415,7 @@ class FlipCardGame {
             }
 
             if (rpsResult === 'draw') {
-                this.dom.rpsStatus.innerHTML = '<span style="color:#d97706">HÒA NHAU! Oẳn tù tì lại nào!</span>';
+                this.dom.rpsStatus.innerHTML = `<span style="color:#d97706">${this.t('rps.draw')}</span>`;
                 setTimeout(() => {
                     if (!isSessionValid()) return;
                     this.dom.rpsPlayerChoice.textContent = '❓';
@@ -1160,7 +1423,7 @@ class FlipCardGame {
                     this.dom.rpsButtons.forEach(b => b.disabled = false);
                 }, 900);
             } else if (rpsResult === 'win') {
-                this.dom.rpsStatus.innerHTML = '<span style="color:#16a34a">BẠN THẮNG! BẠN ĐƯỢC ĐẬP TRƯỚC! 🔥</span>';
+                this.dom.rpsStatus.innerHTML = `<span style="color:#16a34a">${this.t('rps.win')}</span>`;
                 this.activeSmasher = 'player';
                 setTimeout(() => {
                     if (!isSessionValid()) return;
@@ -1168,7 +1431,7 @@ class FlipCardGame {
                     this.startSmashPhase();
                 }, 1300);
             } else {
-                this.dom.rpsStatus.innerHTML = '<span style="color:#dc2626">ROBO THẮNG! ROBO ĐƯỢC ĐẬP TRƯỚC! 🤖</span>';
+                this.dom.rpsStatus.innerHTML = `<span style="color:#dc2626">${this.t('rps.lose')}</span>`;
                 this.activeSmasher = 'bot';
                 setTimeout(() => {
                     if (!isSessionValid()) return;
@@ -1196,13 +1459,13 @@ class FlipCardGame {
         // 2. Tự động được quyền ĐẬP TRƯỚC!
         if (this.lastRoundWinner === 'player' || this.lastRoundWinner === null) {
             this.activeSmasher = 'player';
-            this.dom.stakePromptText.innerHTML = `🌟 <b>BẠN THẮNG HIỆP TRƯỚC!</b><br>Bạn được quyền ĐẬP TRƯỚC và chọn số lá cược (tối đa ${maxStake} lá):`;
+            this.dom.stakePromptText.innerHTML = this.t('stake.winPrompt', { max: maxStake });
             this.dom.stakeBotNotice.classList.add('hidden');
 
             for (let s = minStake; s <= maxStake; s++) {
                 const btn = document.createElement('button');
                 btn.className = 'btn-stake-choice';
-                btn.innerHTML = `<span class="stake-num">${s}</span><span class="stake-lbl">LÁ</span>`;
+                btn.innerHTML = `<span class="stake-num">${s}</span><span class="stake-lbl">${this.t('stake.cardUnit')}</span>`;
                 btn.addEventListener('click', () => {
                     window.soundManager.playClick();
                     this.confirmStake(s);
@@ -1213,8 +1476,10 @@ class FlipCardGame {
             // Máy thắng hiệp trước
             const bossName = this.currentBoss ? this.currentBoss.name : 'ROBO';
             this.activeSmasher = 'bot';
-            this.dom.stakePromptText.innerHTML = `🤖 <b>${bossName} THẮNG HIỆP TRƯỚC!</b><br>${bossName} sẽ được đập trước và đang chọn số lá cược...`;
+            this.dom.stakePromptText.innerHTML = this.t('stake.botPrompt', { boss: bossName });
             this.dom.stakeBotNotice.classList.remove('hidden');
+            const noticeText = document.getElementById('stake-bot-notice-text');
+            if (noticeText) noticeText.textContent = this.t('stake.thinking', { boss: bossName });
 
             const sessionId = this.gameSessionId;
             const isSessionValid = () => sessionId === this.gameSessionId && this.currentScreen === 'game';
@@ -1223,7 +1488,7 @@ class FlipCardGame {
                 if (!isSessionValid()) return;
 
                 const botStake = this.chooseBotStake(minStake, maxStake);
-                this.dom.stakePromptText.innerHTML = `🤖 <b>${bossName} ĐÃ CHỌN CƯỢC ${botStake} LÁ!</b>`;
+                this.dom.stakePromptText.innerHTML = this.t('stake.botChosen', { boss: bossName, stake: botStake });
                 window.soundManager.playRpsCountdown(500);
 
                 setTimeout(() => {
@@ -1283,13 +1548,13 @@ class FlipCardGame {
         if (this.activeSmasher === 'player') {
             this.dom.btnSmash.disabled = false;
             this.dom.btnSmash.classList.remove('bot-turn');
-            this.dom.btnSmash.textContent = '💥 ĐẬP NGAY! 💥';
-            this.dom.arenaMessage.textContent = 'Tập trung! Canh đúng vạch VÀNG rồi bấm ĐẬP!';
+            this.dom.btnSmash.textContent = this.t('game.smashButton');
+            this.dom.arenaMessage.textContent = this.t('game.focus');
         } else {
             this.dom.btnSmash.disabled = true;
             this.dom.btnSmash.classList.add('bot-turn');
-            this.dom.btnSmash.textContent = '🤖 ROBO ĐANG CANH ĐẬP...';
-            this.dom.arenaMessage.textContent = `${this.currentBoss.name} đang canh nhịp con trỏ...`;
+            this.dom.btnSmash.textContent = this.t('game.botWaiting');
+            this.dom.arenaMessage.textContent = this.t('game.botAiming', { boss: this.currentBoss.name });
 
             this.scheduleBotSmash();
         }
@@ -1297,10 +1562,10 @@ class FlipCardGame {
 
     updateTurnIndicator() {
         if (this.activeSmasher === 'player') {
-            this.dom.turnIndicator.innerHTML = '<span class="badge player">👉 LƯỢT CỦA BẠN</span>';
+            this.dom.turnIndicator.innerHTML = `<span class="badge player">${this.t('game.turnPlayer')}</span>`;
             this.dom.turnIndicator.className = 'turn-box player-turn';
         } else {
-            this.dom.turnIndicator.innerHTML = '<span class="badge bot">👉 LƯỢT CỦA ROBO</span>';
+            this.dom.turnIndicator.innerHTML = `<span class="badge bot">${this.t('game.turnBot')}</span>`;
             this.dom.turnIndicator.className = 'turn-box bot-turn';
         }
     }
@@ -1440,7 +1705,7 @@ class FlipCardGame {
 
         const bossName = this.currentBoss ? this.currentBoss.name : 'ROBO';
         this.showToast(
-            smasher === 'player' ? '🔥 BẠN ĐÃ LẬT BÀI THÀNH CÔNG!' : `🤖 ${bossName} ĐÃ LẬT BÀI THÀNH CÔNG!`,
+            smasher === 'player' ? this.t('game.flipWin') : this.t('game.flipWinBot', { boss: bossName }),
             'success'
         );
 
@@ -1480,7 +1745,7 @@ class FlipCardGame {
 
         const bossName = this.currentBoss ? this.currentBoss.name : 'ROBO';
         this.showToast(
-            smasher === 'player' ? `💨 ĐẬP HỤT! Chuyển lượt sang ${bossName}!` : `💨 ${bossName} ĐẬP HỤT! Chuyển lượt sang BẠN!`,
+            smasher === 'player' ? this.t('game.missPlayer', { boss: bossName }) : this.t('game.missBot', { boss: bossName }),
             'miss'
         );
 
@@ -1536,7 +1801,7 @@ class FlipCardGame {
         // 3. Nếu chưa kết thúc, chuyển sang hiệp tiếp theo
         const nextRound = this.currentRound + 1;
         const sessionId = this.gameSessionId;
-        this.showToast(`Chuẩn bị bắt đầu Hiệp ${nextRound}...`, 'info');
+        this.showToast(this.t('game.nextRound', { round: nextRound }), 'info');
         setTimeout(() => {
             if (sessionId !== this.gameSessionId || this.currentScreen !== 'game' || this.isGameEnded) return;
             this.startRound(nextRound);
@@ -1561,34 +1826,34 @@ class FlipCardGame {
 
         if (reason === 'player_knockout') {
             isPlayerWin = true;
-            this.dom.resultTitle.textContent = 'YOU WON! 🏆';
+            this.dom.resultTitle.textContent = this.t('result.win');
             this.dom.resultTitle.classList.add('win-text');
-            this.dom.resultSubtitle.textContent = `BẠN ĐÃ HỐT SẠCH BÀI CỦA ${bossName} (KNOCKOUT)!`;
+            this.dom.resultSubtitle.textContent = this.t('result.knockoutWin', { boss: bossName });
             this.dom.resultHeroImg.src = 'icons/trophy-win.svg';
         } else if (reason === 'bot_knockout') {
             isPlayerWin = false;
-            this.dom.resultTitle.textContent = 'YOU LOST! 💀';
+            this.dom.resultTitle.textContent = this.t('result.lose');
             this.dom.resultTitle.classList.add('lose-text');
-            this.dom.resultSubtitle.textContent = 'Bạn đã hết sạch bài trước khi qua 5 hiệp!';
+            this.dom.resultSubtitle.textContent = this.t('result.knockoutLose');
             this.dom.resultHeroImg.src = 'icons/lose-cry.svg';
         } else {
             // Hết 5 hiệp, so sánh số bài
             if (this.playerCards > this.botCards) {
                 isPlayerWin = true;
-                this.dom.resultTitle.textContent = 'YOU WON! 🏆';
+                this.dom.resultTitle.textContent = this.t('result.win');
                 this.dom.resultTitle.classList.add('win-text');
-                this.dom.resultSubtitle.textContent = `Sau 5 hiệp đấu, bạn nắm giữ nhiều bài hơn!`;
+                this.dom.resultSubtitle.textContent = this.t('result.maxWin');
                 this.dom.resultHeroImg.src = 'icons/trophy-win.svg';
             } else if (this.playerCards < this.botCards) {
                 isPlayerWin = false;
-                this.dom.resultTitle.textContent = 'YOU LOST! 💀';
+                this.dom.resultTitle.textContent = this.t('result.lose');
                 this.dom.resultTitle.classList.add('lose-text');
-                this.dom.resultSubtitle.textContent = `${bossName} đã sở hữu nhiều bài hơn sau 5 hiệp!`;
+                this.dom.resultSubtitle.textContent = this.t('result.maxLose', { boss: bossName });
                 this.dom.resultHeroImg.src = 'icons/lose-cry.svg';
             } else {
                 isDraw = true;
-                this.dom.resultTitle.textContent = 'DRAW! 🤝';
-                this.dom.resultSubtitle.textContent = `Cả hai bên đều sở hữu đúng 10 lá bài!`;
+                this.dom.resultTitle.textContent = this.t('result.draw');
+                this.dom.resultSubtitle.textContent = this.t('result.drawText');
                 this.dom.resultHeroImg.src = 'icons/trophy-win.svg';
             }
         }
@@ -1601,7 +1866,7 @@ class FlipCardGame {
             this.dom.btnOpenWheel.disabled = false;
         }
         if (isPlayerWin) {
-            this.dom.resultSubtitle.textContent += ' Bạn nhận được 1 lượt quay may mắn! 🎡';
+            this.dom.resultSubtitle.textContent += ' ' + this.t('result.spinEarned');
             if (this.dom.wheelCtaReward) {
                 this.dom.wheelCtaReward.textContent = `×${this.currentBoss.heartSlots} ❤️`;
             }
@@ -1610,18 +1875,19 @@ class FlipCardGame {
         this.dom.resultScoreDetail.innerHTML = `
             <div class="final-score-box">
                 <div class="side-score player">
-                    <span>👤 ${this.playerName.toUpperCase()}</span>
-                    <strong>${this.playerCards} LÁ</strong>
+                    <span>${this.t('result.youLabel', { name: this.playerName.toUpperCase() })}</span>
+                    <strong>${this.t('result.cards', { count: this.playerCards })}</strong>
                 </div>
                 <div class="hud-center-vs" style="font-size: 20px; color: #ef4444;">VS</div>
                 <div class="side-score bot">
-                    <span>🤖 ${bossName}</span>
-                    <strong>${this.botCards} LÁ</strong>
+                    <span>${this.t('result.botLabel', { boss: bossName })}</span>
+                    <strong>${this.t('result.cards', { count: this.botCards })}</strong>
                 </div>
             </div>
         `;
 
         if (isPlayerWin) {
+            this.recordWinForLeaderboard();
             window.soundManager.playVictory();
             this.launchConfetti();
         } else if (!isDraw) {
@@ -1629,12 +1895,10 @@ class FlipCardGame {
         }
 
         // ========================================================
-        // GOOGLE ADMOB: Interstitial sau kết quả.
-        // Nếu thắng, chờ người chơi quay thưởng xong mới hiện để không che vòng quay.
+        // GOOGLE ADMOB: Hiển thị Interstitial ngay sau kết quả
+        // cho cả trường hợp thắng và thua.
         // ========================================================
-        if (!isPlayerWin) {
-            this.scheduleInterstitial(1200);
-        }
+        this.showResultInterstitial();
     }
 
     // ========================================================
@@ -1669,17 +1933,14 @@ class FlipCardGame {
             cell.className = 'wheel-cell mystery';
             cell.dataset.index = i;
             cell.innerHTML = '<span class="wheel-cell-icon">?</span>';
-            cell.setAttribute('aria-label', 'Ô chưa mở');
+            cell.setAttribute('aria-label', this.t('wheel.cellHidden'));
 
             this.dom.wheelGrid.appendChild(cell);
             this.wheelCellEls.push(cell);
         }
 
-        if (this.dom.wheelSubtitle) {
-            this.dom.wheelSubtitle.innerHTML = `<b>${boss.tier}</b> • ${boss.name}`;
-        }
         if (this.dom.wheelResult) {
-            this.dom.wheelResult.textContent = '🍀 Chạm QUAY để thử vận may!';
+            this.dom.wheelResult.textContent = this.t('wheel.default');
             this.dom.wheelResult.className = 'wheel-result';
         }
         if (this.dom.btnSpinWheel) {
@@ -1719,7 +1980,7 @@ class FlipCardGame {
         if (this.dom.btnWheelContinue) this.dom.btnWheelContinue.classList.add('hidden');
         if (this.dom.btnWheelBack) this.dom.btnWheelBack.disabled = true;
         if (this.dom.wheelResult) {
-            this.dom.wheelResult.textContent = '🎡 Đang quay...';
+            this.dom.wheelResult.textContent = this.t('wheel.spinning');
             this.dom.wheelResult.className = 'wheel-result';
         }
 
@@ -1769,7 +2030,7 @@ class FlipCardGame {
         cell.innerHTML = isHeart
             ? '<span class="wheel-cell-icon">❤️</span>'
             : '<span class="wheel-cell-icon">✖</span>';
-        cell.setAttribute('aria-label', isHeart ? 'Ô tim' : 'Ô trống');
+        cell.setAttribute('aria-label', isHeart ? this.t('wheel.cellHeart') : this.t('wheel.cellEmpty'));
     }
 
     finalizeWheel(targetIndex) {
@@ -1807,8 +2068,8 @@ class FlipCardGame {
             if (this.dom.wheelResult) {
                 this.dom.wheelResult.className = 'wheel-result win';
                 this.dom.wheelResult.innerHTML = added > 0
-                    ? '🎉 TRÚNG THƯỞNG! +1 ❤️'
-                    : '🎉 TRÚNG Ô TIM! Nhưng tim đã đầy rồi.';
+                    ? this.t('wheel.win')
+                    : this.t('wheel.winFull');
             }
 
             if (cell) cell.classList.add('is-heart-win');
@@ -1817,7 +2078,7 @@ class FlipCardGame {
         } else {
             if (this.dom.wheelResult) {
                 this.dom.wheelResult.className = 'wheel-result miss';
-                this.dom.wheelResult.textContent = '😢 Ô trống! Chúc bạn may mắn lần sau!';
+                this.dom.wheelResult.textContent = this.t('wheel.lose');
             }
             window.soundManager.playMissWhoosh();
         }
@@ -1837,11 +2098,6 @@ class FlipCardGame {
         this.hideModals();
         if (this.dom.modalResult) {
             this.showModal(this.dom.modalResult);
-        }
-
-        // Interstitial sau khi đã nhận thưởng xong
-        if (this.wheelUsed) {
-            this.scheduleInterstitial(300);
         }
     }
 
@@ -1876,12 +2132,16 @@ class FlipCardGame {
             this.dom.modalHowToPlay,
             this.dom.modalSettings,
             this.dom.modalWheel,
-            this.dom.modalNoHearts
+            this.dom.modalNoHearts,
+            this.dom.modalLeaderboard
         ].forEach(m => m.classList.add('hidden'));
         modalElement.classList.remove('hidden');
     }
 
     hideModals() {
+        if (window.leaderboardManager) {
+            window.leaderboardManager.stopUpdates();
+        }
         this.dom.modalOverlay.classList.add('hidden');
         [
             this.dom.modalRps,
@@ -1890,7 +2150,8 @@ class FlipCardGame {
             this.dom.modalHowToPlay,
             this.dom.modalSettings,
             this.dom.modalWheel,
-            this.dom.modalNoHearts
+            this.dom.modalNoHearts,
+            this.dom.modalLeaderboard
         ].forEach(m => m.classList.add('hidden'));
     }
 }

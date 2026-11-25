@@ -1,66 +1,66 @@
 [
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xxxhdpi_ic_launcher_background.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xxxhdpi/ic_launcher_background.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-anydpi-v26/ic_launcher.xml"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xhdpi/ic_launcher.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xxxhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-hdpi_ic_launcher_background.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-hdpi/ic_launcher_background.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xxhdpi/ic_launcher_foreground.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xhdpi_ic_launcher_background.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xhdpi/ic_launcher_background.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xxhdpi/ic_launcher.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-mdpi_ic_launcher_foreground.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-mdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xhdpi_ic_launcher_background.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xhdpi/ic_launcher_background.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-mdpi_ic_launcher_foreground.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-mdpi/ic_launcher_foreground.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-mdpi_ic_launcher_background.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-mdpi/ic_launcher_background.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-mdpi_ic_launcher.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-mdpi/ic_launcher.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xxhdpi_ic_launcher_background.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xxhdpi/ic_launcher_background.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xxhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-hdpi_ic_launcher_foreground.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-hdpi/ic_launcher_foreground.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-hdpi_ic_launcher.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-hdpi/ic_launcher.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xxxhdpi_ic_launcher_background.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xxxhdpi/ic_launcher_background.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xxxhdpi/ic_launcher_foreground.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xxxhdpi/ic_launcher.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-mdpi/ic_launcher.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-mdpi_ic_launcher_background.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-mdpi/ic_launcher_background.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-hdpi_ic_launcher_foreground.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-hdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-hdpi_ic_launcher_background.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-hdpi/ic_launcher_background.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-hdpi/ic_launcher.png"
     },
     {
-        "merged": "com.flipcardhero.game.app-release-17:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
-        "source": "com.flipcardhero.game.app-main-18:/mipmap-xhdpi/ic_launcher_foreground.png"
+        "merged": "com.flipcardhero.game.app-release-27:/mipmap-xxhdpi_ic_launcher_background.png.flat",
+        "source": "com.flipcardhero.game.app-main-28:/mipmap-xxhdpi/ic_launcher_background.png"
     }
 ]

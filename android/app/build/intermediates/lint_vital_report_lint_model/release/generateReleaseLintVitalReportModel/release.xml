@@ -25,6 +25,7 @@
       type="MAIN"
       applicationId="com.flipcardhero.game"
       generatedSourceFolders="build/generated/ap_generated_sources/release/out"
-      desugaredMethodsFiles="/Users/Amuro/.gradle/caches/9.6.0/transforms/49e936ec76ce8b581a8de9662ed4f404/transformed/D8BackportedDesugaredMethods.txt">
+      generatedResourceFolders="build/generated/res/processReleaseGoogleServices"
+      desugaredMethodsFiles="/Users/Amuro/.gradle/caches/9.6.0/transforms/505b564486ceabcb5e0db5ec646e40de/transformed/D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>
