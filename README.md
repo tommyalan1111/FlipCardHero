@@ -198,6 +198,63 @@ Dự án đã tích hợp hoàn chỉnh Google Mobile Ads SDK (AdMob) trên Andr
 > 3. Trong quá trình phát triển & test thử nghiệm, bạn có thể chuyển `<bool name="use_test_ads">true</bool>` để dùng ID test an toàn của Google, tránh bị AdMob khoá tài khoản vì nhấp quảng cáo thật của mình. Khi chuẩn bị phát hành lên Google Play, đổi lại thành `false`.
 > 4. Bộ ID test tương ứng nằm trong `android/app/src/main/res/values/strings.xml`: Banner `admob_test_banner_id`, Interstitial `admob_test_interstitial_id`, Rewarded `admob_test_rewarded_id`.
 
+### 🏆 BẢNG XẾP HẠNG FIREBASE (TÙY CHỌN)
+
+Game có sẵn leaderboard dùng **Firebase Anonymous Auth + Cloud Firestore** (native Android, không cần backend riêng).
+
+- Điểm = **Easy 1 + Medium 2 + Hard 3** cho mỗi trận thắng.
+- Điểm và số trận thắng theo từng boss được lưu local (`localStorage`), đồng thời gửi lên Firestore.
+- Tên người chơi được chuẩn hoá **IN HOA** cả trên giao diện lẫn document Firestore.
+- Top 50 hiển thị trong nút **🏆 BẢNG XẾP HẠNG** và **tự cập nhật realtime** khi có người ghi điểm.
+- Nếu người chơi ngoài top 50, bảng vẫn hiển thị hạng thực tế của họ (ví dụ “Hạng #52 • Ngoài top 50”).
+- Nếu chưa cấu hình Firebase, game vẫn chạy bình thường; riêng bảng xếp hạng sẽ báo chưa khả dụng.
+
+#### Các bước bật leaderboard
+
+1. Tạo project tại [console.firebase.google.com](https://console.firebase.google.com/).
+2. Thêm ứng dụng Android với package name:
+   ```text
+   com.flipcardhero.game
+   ```
+3. Tải file `google-services.json` và đặt vào:
+   ```text
+   android/app/google-services.json
+   ```
+4. Vào **Authentication → Sign-in method**, bật **Anonymous**.
+5. Vào **Firestore Database**, tạo database (khuyến nghị Production mode).
+6. Dán Security Rules sau:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leaderboard/{uid} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 9
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0;
+
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 9
+        && request.resource.data.score is int
+        && request.resource.data.score >= resource.data.score;
+    }
+  }
+}
+```
+
+7. Build lại app. Gradle sẽ tự áp dụng Google Services plugin khi thấy `google-services.json`.
+
+> **Lưu ý:** điểm được gửi từ client nên chỉ phù hợp leaderboard casual. Nếu cần chống gian lận hoặc phần thưởng có giá trị, cần thêm Cloud Functions/backend để xác thực (Cloud Functions yêu cầu gói Blaze). Với lượng người chơi nhỏ, Firestore free tier (Spark) thường đủ dùng.
+
 ### Phương án 2: Cài đặt dạng PWA (Không cần build APK)
 1. Đưa web lên bất kỳ hosting miễn phí nào (như Vercel, Netlify, GitHub Pages).
 2. Mở link web trên trình duyệt Google Chrome trên điện thoại Android.
@@ -236,8 +293,10 @@ Flip Card Hero/
 │   └── style.css           # Hiệu ứng 3D lật bài, rung màn hình, giao diện bàn chơi
 ├── js/
 │   ├── audio.js            # Hệ thống âm thanh vỗ đập Web Audio API & Rung Haptic
+│   ├── ads.js              # Bridge Banner / Interstitial / Rewarded Ad
+│   ├── leaderboard.js      # Bridge gọi leaderboard native Android
 │   └── game.js             # Logic Gameplay Core, State Machine, AI Máy
 ├── icons/                  # Bộ icon chuẩn HD (192x192, 512x512)
-└── android/                # Android native WebView + AdMob, build bằng Gradle/Android Studio
+└── android/                # Android native WebView + AdMob + Firebase Leaderboard
 ```
 # FlipCardHero

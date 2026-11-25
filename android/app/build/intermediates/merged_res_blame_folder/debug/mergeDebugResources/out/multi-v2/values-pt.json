@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.flipcardhero.game.app-mergeDebugResources-15:/values-pt/values-pt.xml",
+            "outputFile": "com.flipcardhero.game.app-mergeDebugResources-25:/values-pt/values-pt.xml",
             "map": [
                 {
-                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/4de448384e6aa8fb942baa40e8339a48/transformed/core-1.8.0/res/values-pt/values-pt.xml",
+                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/0af05c5b0c94a7b64baf51980c755c22/transformed/core-1.9.0/res/values-pt/values-pt.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -13,21 +13,38 @@
                         "endOffsets": "151"
                     },
                     "to": {
-                        "startLines": "6",
+                        "startLines": "8",
                         "startColumns": "4",
-                        "startOffsets": "487",
+                        "startOffsets": "718",
                         "endColumns": "100",
-                        "endOffsets": "583"
+                        "endOffsets": "814"
                     }
                 },
                 {
-                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/9b78df61070da9286b64bc1d2757dd46/transformed/browser-1.8.0/res/values-pt/values-pt.xml",
+                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/de422f6c5b51916518b61848c1c9451c/transformed/browser-1.8.0/res/values-pt/values-pt.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",
                         "startOffsets": "55,170,269,381",
                         "endColumns": "114,98,111,105",
                         "endOffsets": "165,264,376,482"
+                    },
+                    "to": {
+                        "startLines": "4,5,6,7",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "286,401,500,612",
+                        "endColumns": "114,98,111,105",
+                        "endOffsets": "396,495,607,713"
+                    }
+                },
+                {
+                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/375f3f6fe7d76c8086cccf40c1198621/transformed/credentials-1.2.0-rc01/res/values-pt/values-pt.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,164",
+                        "endColumns": "108,121",
+                        "endOffsets": "159,281"
                     }
                 }
             ]

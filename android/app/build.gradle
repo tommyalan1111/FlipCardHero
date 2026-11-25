@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+// Chỉ áp dụng Google Services khi đã có file cấu hình Firebase.
+// Nhờ vậy project vẫn build được khi chưa tạo Firebase project.
+if (file('google-services.json').exists()) {
+    apply plugin: 'com.google.gms.google-services'
+}
+
 android {
     namespace 'com.flipcardhero.game'
     compileSdk 35
@@ -39,4 +45,9 @@ configurations.configureEach {
 dependencies {
     // Google Mobile Ads (AdMob)
     implementation 'com.google.android.gms:play-services-ads:23.6.0'
+
+    // Firebase Auth (Anonymous) + Cloud Firestore cho leaderboard
+    implementation platform('com.google.firebase:firebase-bom:35.2.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
 }

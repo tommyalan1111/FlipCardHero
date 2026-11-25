@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <bool name="use_test_ads">true</bool>
+    <bool name="use_test_ads">false</bool>
     <string name="admob_app_id">ca-app-pub-1345063149639557~9613308627</string>
     <string name="admob_banner_id">ca-app-pub-1345063149639557/1736099863</string>
     <string name="admob_interstitial_id">ca-app-pub-1345063149639557/9583508131</string>
@@ -9,6 +9,12 @@
     <string name="admob_test_interstitial_id">ca-app-pub-3940256099942544/1033173712</string>
     <string name="admob_test_rewarded_id">ca-app-pub-3940256099942544/5224354917</string>
     <string name="app_name">Flip Card Hero</string>
+    <string name="gcm_defaultSenderId" translatable="false">269479387017</string>
+    <string name="google_api_key" translatable="false">AIzaSyC6gdUbFjfJftNT6FLZeGPMSlH5_anUaSM</string>
+    <string name="google_app_id" translatable="false">1:269479387017:android:9d38acc687ab260e780b58</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyC6gdUbFjfJftNT6FLZeGPMSlH5_anUaSM</string>
+    <string name="google_storage_bucket" translatable="false">flip-card-hero.firebasestorage.app</string>
+    <string name="project_id" translatable="false">flip-card-hero</string>
     <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
         <item name="android:windowBackground">#0f172a</item>
         <item name="android:windowNoTitle">true</item>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "269479387017",
+    "project_id": "flip-card-hero",
+    "storage_bucket": "flip-card-hero.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:269479387017:android:9d38acc687ab260e780b58",
+        "android_client_info": {
+          "package_name": "com.flipcardhero.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6gdUbFjfJftNT6FLZeGPMSlH5_anUaSM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

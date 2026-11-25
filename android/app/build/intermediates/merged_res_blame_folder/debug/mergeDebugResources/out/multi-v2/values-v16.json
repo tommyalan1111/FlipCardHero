@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.flipcardhero.game.app-mergeDebugResources-15:/values-v16/values-v16.xml",
+            "outputFile": "com.flipcardhero.game.app-mergeDebugResources-25:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/4de448384e6aa8fb942baa40e8339a48/transformed/core-1.8.0/res/values-v16/values-v16.xml",
+                    "source": "/Users/Amuro/.gradle/caches/9.6.0/transforms/0af05c5b0c94a7b64baf51980c755c22/transformed/core-1.9.0/res/values-v16/values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

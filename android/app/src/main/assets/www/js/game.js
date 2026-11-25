@@ -218,7 +218,9 @@ class FlipCardGame {
         this.currentBoss = BOSS_LEVELS[this.selectedBossKey];
 
         // Player & Opponent state
-        this.playerName = localStorage.getItem('flipCardHero_playerName') || 'LEO';
+        this.playerName = (localStorage.getItem('flipCardHero_playerName') || 'LEO').toUpperCase();
+        this.playerStats = this.loadPlayerStats();
+        this.leaderboardData = null;
         this.playerCards = 10;
         this.botCards = 10;
         this.currentRound = 1;
@@ -322,6 +324,7 @@ class FlipCardGame {
             btnHowToPlay: document.getElementById('btn-how-to-play'),
             btnFreeHeart: document.getElementById('btn-free-heart'),
             btnFreeHeartText: document.getElementById('btn-free-heart-text'),
+            btnLeaderboard: document.getElementById('btn-leaderboard'),
             menuToast: document.getElementById('menu-toast'),
             btnMenuSettings: document.getElementById('btn-menu-settings'),
 
@@ -369,6 +372,11 @@ class FlipCardGame {
             modalSettings: document.getElementById('modal-settings'),
             modalWheel: document.getElementById('modal-wheel'),
             modalNoHearts: document.getElementById('modal-no-hearts'),
+            modalLeaderboard: document.getElementById('modal-leaderboard'),
+            leaderboardMyScore: document.getElementById('leaderboard-my-score'),
+            leaderboardList: document.getElementById('leaderboard-list'),
+            btnCloseLeaderboard: document.getElementById('btn-close-leaderboard'),
+            btnRefreshLeaderboard: document.getElementById('btn-refresh-leaderboard'),
 
             // RPS elements
             rpsPlayerChoice: document.getElementById('rps-player-choice'),
@@ -416,7 +424,7 @@ class FlipCardGame {
         const handleNameInput = () => {
             let val = this.dom.inputHeroName.value;
             // Loại bỏ hoàn toàn ký tự lạ và khoảng trắng ngay lập tức
-            const sanitized = val.replace(/[^a-zA-Z0-9]/g, '');
+            const sanitized = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             if (val !== sanitized) {
                 this.dom.inputHeroName.value = sanitized;
                 val = sanitized;
@@ -521,6 +529,21 @@ class FlipCardGame {
         this.dom.btnFreeHeart.addEventListener('click', () => {
             window.soundManager.playClick();
             this.watchRewardedAdForHeart();
+        });
+
+        this.dom.btnLeaderboard.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.openLeaderboard();
+        });
+
+        this.dom.btnCloseLeaderboard.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.hideModals();
+        });
+
+        this.dom.btnRefreshLeaderboard.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.fetchLeaderboard();
         });
 
         this.dom.btnMenuSettings.addEventListener('click', () => {
@@ -881,12 +904,243 @@ class FlipCardGame {
         }, 2800);
     }
 
+    // ========================================================
+    // BẢNG XẾP HẠNG (FIREBASE - NATIVE ANDROID)
+    // ========================================================
+
+    loadPlayerStats() {
+        const defaults = { easyWins: 0, mediumWins: 0, hardWins: 0 };
+
+        try {
+            const raw = localStorage.getItem('flipCardHero_stats');
+            if (!raw) return defaults;
+
+            const data = JSON.parse(raw);
+            return {
+                easyWins: Math.max(0, parseInt(data.easyWins, 10) || 0),
+                mediumWins: Math.max(0, parseInt(data.mediumWins, 10) || 0),
+                hardWins: Math.max(0, parseInt(data.hardWins, 10) || 0)
+            };
+        } catch (e) {
+            return defaults;
+        }
+    }
+
+    savePlayerStats() {
+        try {
+            localStorage.setItem('flipCardHero_stats', JSON.stringify(this.playerStats));
+        } catch (e) {
+            // Bỏ qua nếu localStorage bị chặn
+        }
+    }
+
+    getTotalWins() {
+        return (this.playerStats.easyWins || 0)
+            + (this.playerStats.mediumWins || 0)
+            + (this.playerStats.hardWins || 0);
+    }
+
+    getBestBoss() {
+        if (this.playerStats.hardWins > 0) return 3;
+        if (this.playerStats.mediumWins > 0) return 2;
+        if (this.playerStats.easyWins > 0) return 1;
+        return 0;
+    }
+
+    getLeaderboardScore() {
+        return (this.playerStats.easyWins || 0) * 1
+            + (this.playerStats.mediumWins || 0) * 2
+            + (this.playerStats.hardWins || 0) * 3;
+    }
+
+    submitCurrentScore() {
+        if (!window.leaderboardManager || typeof window.leaderboardManager.submitScore !== 'function') {
+            return false;
+        }
+
+        return window.leaderboardManager.submitScore({
+            name: this.playerName,
+            score: this.getLeaderboardScore(),
+            easyWins: this.playerStats.easyWins || 0,
+            mediumWins: this.playerStats.mediumWins || 0,
+            hardWins: this.playerStats.hardWins || 0,
+            bestBoss: this.getBestBoss()
+        });
+    }
+
+    recordWinForLeaderboard() {
+        if (!this.currentBoss) return;
+
+        const key = this.currentBoss.key;
+        if (key !== 'easy' && key !== 'medium' && key !== 'hard') return;
+
+        const field = `${key}Wins`;
+        this.playerStats[field] = (this.playerStats[field] || 0) + 1;
+        this.savePlayerStats();
+        this.submitCurrentScore();
+    }
+
+    openLeaderboard() {
+        this.updateLeaderboardPreview(null);
+        this.renderLeaderboardState('Đang tải bảng xếp hạng...', false);
+        this.showModal(this.dom.modalLeaderboard);
+
+        // Cập nhật tên / điểm mới nhất trước khi tải bảng
+        if (this.getTotalWins() > 0) {
+            this.submitCurrentScore();
+        }
+
+        this.fetchLeaderboard();
+    }
+
+    fetchLeaderboard() {
+        this.renderLeaderboardState('Đang tải bảng xếp hạng...', false);
+
+        if (!window.leaderboardManager || !window.leaderboardManager.isAvailable()) {
+            this.renderLeaderboardState(
+                'Bảng xếp hạng chỉ khả dụng trên app Android đã cấu hình Firebase.',
+                true
+            );
+            return;
+        }
+
+        window.leaderboardManager.setHandlers({
+            onData: (data) => {
+                this.leaderboardData = data;
+                this.renderLeaderboard(data);
+            },
+            onError: (message) => {
+                if (message === 'unavailable') {
+                    this.renderLeaderboardState(
+                        'Bảng xếp hạng chỉ khả dụng trên app Android đã cấu hình Firebase.',
+                        true
+                    );
+                } else if (message === 'timeout') {
+                    this.renderLeaderboardState('Kết nối quá lâu. Kiểm tra mạng rồi thử lại nhé!', true);
+                } else {
+                    this.renderLeaderboardState(
+                        message || 'Không thể tải bảng xếp hạng. Kiểm tra mạng và cấu hình Firebase.',
+                        true
+                    );
+                }
+                this.updateLeaderboardPreview(null);
+            }
+        });
+
+        window.leaderboardManager.startUpdates();
+    }
+
+    updateLeaderboardPreview(rank) {
+        if (!this.dom.leaderboardMyScore) return;
+
+        const box = this.dom.leaderboardMyScore;
+        box.innerHTML = '';
+
+        const info = document.createElement('div');
+        info.className = 'leaderboard-me-info';
+
+        const nameLine = document.createElement('span');
+        nameLine.textContent = `👤 ${this.playerName.toUpperCase()} • ${this.getTotalWins()} thắng`;
+
+        const rankLine = document.createElement('span');
+        rankLine.className = 'leaderboard-my-rank';
+        if (typeof rank === 'number' && rank > 0) {
+            rankLine.textContent = rank > 50
+                ? `Hạng #${rank} • Ngoài top 50`
+                : `Hạng #${rank}`;
+            if (rank > 50) rankLine.classList.add('outside');
+        } else if (rank === 0) {
+            rankLine.textContent = 'Chưa có hạng trên bảng';
+        } else {
+            rankLine.textContent = 'Đang tải hạng...';
+        }
+
+        info.appendChild(nameLine);
+        info.appendChild(rankLine);
+
+        const right = document.createElement('strong');
+        right.textContent = `${this.getLeaderboardScore()} điểm`;
+
+        box.appendChild(info);
+        box.appendChild(right);
+    }
+
+    renderLeaderboardState(message, isError) {
+        if (!this.dom.leaderboardList) return;
+
+        const list = this.dom.leaderboardList;
+        list.innerHTML = '';
+
+        const state = document.createElement('div');
+        state.className = `leaderboard-state${isError ? ' error' : ''}`;
+        state.textContent = message;
+        list.appendChild(state);
+    }
+
+    renderLeaderboard(data) {
+        if (!this.dom.leaderboardList) return;
+
+        const list = this.dom.leaderboardList;
+        const entries = data && Array.isArray(data.entries) ? data.entries : [];
+        const myUid = data && data.myUid ? data.myUid : '';
+        const myRank = data && typeof data.myRank === 'number' ? data.myRank : 0;
+
+        this.updateLeaderboardPreview(myRank);
+        list.innerHTML = '';
+
+        if (entries.length === 0) {
+            this.renderLeaderboardState('Chưa có ai trên bảng. Thắng 1 trận để ghi tên nhé!', false);
+            return;
+        }
+
+        entries.forEach((entry, index) => {
+            const row = document.createElement('div');
+            row.className = 'leaderboard-row';
+            if (index < 3) row.classList.add(`top-${index + 1}`);
+            if (myUid && entry.uid === myUid) row.classList.add('is-me');
+
+            const rank = document.createElement('span');
+            rank.className = 'leaderboard-rank';
+            rank.textContent = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : String(index + 1);
+
+            const info = document.createElement('div');
+            info.style.minWidth = '0';
+
+            const name = document.createElement('div');
+            name.className = 'leaderboard-name';
+            name.textContent = String(entry.name || 'PLAYER').toUpperCase();
+
+            const meta = document.createElement('div');
+            meta.className = 'leaderboard-meta';
+            const totalWins = (entry.easyWins || 0) + (entry.mediumWins || 0) + (entry.hardWins || 0);
+            meta.textContent = `${totalWins} trận thắng`;
+
+            info.appendChild(name);
+            info.appendChild(meta);
+
+            const score = document.createElement('span');
+            score.className = 'leaderboard-score';
+            score.textContent = String(entry.score || 0);
+            const unit = document.createElement('small');
+            unit.textContent = 'điểm';
+            score.appendChild(unit);
+
+            row.appendChild(rank);
+            row.appendChild(info);
+            row.appendChild(score);
+            list.appendChild(row);
+        });
+    }
+
     confirmPlayerName() {
         const val = this.dom.inputHeroName.value.trim();
         if (val.length >= 3 && val.length <= 9 && /^[a-zA-Z0-9]+$/.test(val)) {
-            this.playerName = val;
+            this.playerName = val.toUpperCase();
             localStorage.setItem('flipCardHero_playerName', this.playerName);
             this.updatePlayerNameDisplays();
+            if (this.getTotalWins() > 0) {
+                this.submitCurrentScore();
+            }
             this.switchScreen('main-menu');
         }
     }
@@ -916,7 +1170,7 @@ class FlipCardGame {
             if (this.currentScreen === 'splash') {
                 const saved = localStorage.getItem('flipCardHero_playerName');
                 if (saved && saved.length >= 3 && saved.length <= 9) {
-                    this.playerName = saved;
+                    this.playerName = saved.toUpperCase();
                     this.updatePlayerNameDisplays();
                     this.switchScreen('main-menu');
                 } else {
@@ -929,7 +1183,7 @@ class FlipCardGame {
             if (this.currentScreen === 'splash') {
                 const saved = localStorage.getItem('flipCardHero_playerName');
                 if (saved && saved.length >= 3 && saved.length <= 9) {
-                    this.playerName = saved;
+                    this.playerName = saved.toUpperCase();
                     this.updatePlayerNameDisplays();
                     this.switchScreen('main-menu');
                 } else {
@@ -1622,6 +1876,7 @@ class FlipCardGame {
         `;
 
         if (isPlayerWin) {
+            this.recordWinForLeaderboard();
             window.soundManager.playVictory();
             this.launchConfetti();
         } else if (!isDraw) {
@@ -1876,12 +2131,16 @@ class FlipCardGame {
             this.dom.modalHowToPlay,
             this.dom.modalSettings,
             this.dom.modalWheel,
-            this.dom.modalNoHearts
+            this.dom.modalNoHearts,
+            this.dom.modalLeaderboard
         ].forEach(m => m.classList.add('hidden'));
         modalElement.classList.remove('hidden');
     }
 
     hideModals() {
+        if (window.leaderboardManager) {
+            window.leaderboardManager.stopUpdates();
+        }
         this.dom.modalOverlay.classList.add('hidden');
         [
             this.dom.modalRps,
@@ -1890,7 +2149,8 @@ class FlipCardGame {
             this.dom.modalHowToPlay,
             this.dom.modalSettings,
             this.dom.modalWheel,
-            this.dom.modalNoHearts
+            this.dom.modalNoHearts,
+            this.dom.modalLeaderboard
         ].forEach(m => m.classList.add('hidden'));
     }
 }

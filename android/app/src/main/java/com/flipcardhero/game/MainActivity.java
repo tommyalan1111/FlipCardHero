@@ -38,6 +38,8 @@ import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 
+import org.json.JSONObject;
+
 public class MainActivity extends Activity {
     private static final String TAG = "FlipCardHero_AdMob";
 
@@ -50,6 +52,8 @@ public class MainActivity extends Activity {
     private boolean isRewardedLoading = false;
     private boolean isRewardedShowing = false;
     private boolean pendingRewardedShow = false;
+
+    private FirebaseLeaderboardManager leaderboardManager;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -109,10 +113,11 @@ public class MainActivity extends Activity {
             webView.setWebViewClient(new WebViewClient());
             webView.setWebChromeClient(new WebChromeClient());
 
-            // Đăng ký Javascript Bridge để mã Web tương tác với AdMob
+            // Đăng ký Javascript Bridge để mã Web tương tác với AdMob & Leaderboard
             WebAppInterface bridge = new WebAppInterface();
             webView.addJavascriptInterface(bridge, "AndroidAds");
             webView.addJavascriptInterface(bridge, "AdMobBridge");
+            webView.addJavascriptInterface(bridge, "AndroidLeaderboard");
 
             // Tải giao diện game từ assets
             webView.loadUrl("file:///android_asset/www/index.html");
@@ -122,7 +127,20 @@ public class MainActivity extends Activity {
             rootLayout.addView(adView);
             setContentView(rootLayout);
 
-            // 3. Khởi tạo Google Mobile Ads SDK
+            // 3. Khởi tạo Firebase Leaderboard (Anonymous Auth + Firestore)
+            leaderboardManager = new FirebaseLeaderboardManager(this, new FirebaseLeaderboardManager.Listener() {
+                @Override
+                public void onLeaderboardData(String json) {
+                    notifyLeaderboardData(json);
+                }
+
+                @Override
+                public void onLeaderboardError(String message) {
+                    notifyLeaderboardError(message);
+                }
+            });
+
+            // 4. Khởi tạo Google Mobile Ads SDK
             initAdMob();
 
             // Ẩn thanh điều hướng và trạng thái (Full Immersive Fullscreen)
@@ -398,6 +416,25 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void notifyLeaderboardData(final String json) {
+        if (webView == null) return;
+        webView.post(() -> webView.evaluateJavascript(
+                "window.onLeaderboardData && window.onLeaderboardData(" + JSONObject.quote(json) + ");",
+                null
+        ));
+    }
+
+    private void notifyLeaderboardError(final String message) {
+        if (webView == null) return;
+        final String safeMessage = (message == null || message.isEmpty())
+                ? "Không thể tải bảng xếp hạng."
+                : message;
+        webView.post(() -> webView.evaluateJavascript(
+                "window.onLeaderboardError && window.onLeaderboardError(" + JSONObject.quote(safeMessage) + ");",
+                null
+        ));
+    }
+
     /**
      * Tính toán kích thước Adaptive Banner phù hợp với độ rộng màn hình
      */
@@ -451,6 +488,37 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isRewardedAdReady() {
             return mRewardedAd != null;
+        }
+
+        @JavascriptInterface
+        public boolean isLeaderboardAvailable() {
+            return leaderboardManager != null && leaderboardManager.isAvailable();
+        }
+
+        @JavascriptInterface
+        public void getLeaderboard() {
+            Log.d(TAG, "Gọi getLeaderboard() từ JavaScript");
+            if (leaderboardManager != null) {
+                leaderboardManager.startUpdates();
+            } else {
+                notifyLeaderboardError("Bảng xếp hạng chưa sẵn sàng.");
+            }
+        }
+
+        @JavascriptInterface
+        public void stopLeaderboardUpdates() {
+            Log.d(TAG, "Gọi stopLeaderboardUpdates() từ JavaScript");
+            if (leaderboardManager != null) {
+                leaderboardManager.stopUpdates();
+            }
+        }
+
+        @JavascriptInterface
+        public void submitLeaderboardScore(String json) {
+            Log.d(TAG, "Gọi submitLeaderboardScore() từ JavaScript");
+            if (leaderboardManager != null) {
+                leaderboardManager.submitScore(json);
+            }
         }
 
         @JavascriptInterface

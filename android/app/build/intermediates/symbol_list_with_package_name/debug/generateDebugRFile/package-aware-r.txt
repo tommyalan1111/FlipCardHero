@@ -11,4 +11,10 @@ string admob_test_banner_id
 string admob_test_interstitial_id
 string admob_test_rewarded_id
 string app_name
+string gcm_defaultSenderId
+string google_api_key
+string google_app_id
+string google_crash_reporting_api_key
+string google_storage_bucket
+string project_id
 style AppTheme

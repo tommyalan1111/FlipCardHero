@@ -132,6 +132,11 @@
                     <span id="btn-free-heart-text" class="btn-text">NHẬN 1 ❤️ MIỄN PHÍ</span>
                     <span class="free-heart-ad-tag">AD</span>
                 </button>
+
+                <button id="btn-leaderboard" class="btn-menu-action btn-leaderboard">
+                    <span class="btn-icon">🏆</span>
+                    <span class="btn-text">BẢNG XẾP HẠNG</span>
+                </button>
             </div>
 
             <footer class="menu-footer">
@@ -485,6 +490,28 @@
                 <button id="btn-no-hearts-close" class="btn-action-primary" style="width: 100%; margin-top: 14px;">OK, CHỜ THÊM</button>
             </div>
 
+            <!-- 4.8. MODAL BẢNG XẾP HẠNG (FIREBASE) -->
+            <div id="modal-leaderboard" class="game-modal leaderboard-modal hidden">
+                <div class="modal-top-bar">
+                    <button id="btn-close-leaderboard" class="btn-modal-back" title="Quay lại">
+                        <span class="back-arrow">◀</span> Quay Lại
+                    </button>
+                    <span class="modal-badge-title">Xếp Hạng</span>
+                </div>
+
+                <div class="modal-header-icon">🏆</div>
+                <h2 class="modal-title">BẢNG XẾP HẠNG</h2>
+
+                <div id="leaderboard-my-score" class="leaderboard-my-score"></div>
+                <div id="leaderboard-list" class="leaderboard-list">
+                    <div class="leaderboard-state">Đang tải bảng xếp hạng...</div>
+                </div>
+
+                <button id="btn-refresh-leaderboard" class="btn-action-primary" style="width: 100%; margin-top: 10px;">
+                    🔄 LÀM MỚI
+                </button>
+            </div>
+
         </div>
 
         <!-- PHÁO HOA ĂN MỪNG CHIẾN THẮNG -->
@@ -494,6 +521,7 @@
     <!-- SCRIPTS -->
     <script src="js/audio.js"></script>
     <script src="js/ads.js"></script>
+    <script src="js/leaderboard.js"></script>
     <script src="js/game.js"></script>
 </body>
 </html>
