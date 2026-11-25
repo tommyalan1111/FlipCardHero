@@ -1815,7 +1815,7 @@ class FlipCardGame {
 
         if (reason === 'player_knockout') {
             isPlayerWin = true;
-            this.dom.resultTitle.textContent = 'YOU WON! 🏆';
+            this.dom.resultTitle.textContent = 'YOU WON!';
             this.dom.resultTitle.classList.add('win-text');
             this.dom.resultSubtitle.textContent = `BẠN ĐÃ HỐT SẠCH BÀI CỦA ${bossName} (KNOCKOUT)!`;
             this.dom.resultHeroImg.src = 'icons/trophy-win.svg';
@@ -1829,7 +1829,7 @@ class FlipCardGame {
             // Hết 5 hiệp, so sánh số bài
             if (this.playerCards > this.botCards) {
                 isPlayerWin = true;
-                this.dom.resultTitle.textContent = 'YOU WON! 🏆';
+                this.dom.resultTitle.textContent = 'YOU WON!';
                 this.dom.resultTitle.classList.add('win-text');
                 this.dom.resultSubtitle.textContent = `Sau 5 hiệp đấu, bạn nắm giữ nhiều bài hơn!`;
                 this.dom.resultHeroImg.src = 'icons/trophy-win.svg';
