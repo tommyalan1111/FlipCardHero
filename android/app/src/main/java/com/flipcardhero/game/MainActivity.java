@@ -56,6 +56,7 @@ public class MainActivity extends Activity {
     private boolean pendingRewardedShow = false;
 
     private FirebaseLeaderboardManager leaderboardManager;
+    private FirebaseAccountManager accountManager;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -120,6 +121,7 @@ public class MainActivity extends Activity {
             webView.addJavascriptInterface(bridge, "AndroidAds");
             webView.addJavascriptInterface(bridge, "AdMobBridge");
             webView.addJavascriptInterface(bridge, "AndroidLeaderboard");
+            webView.addJavascriptInterface(bridge, "AndroidAccount");
 
             // Tải giao diện game từ assets
             webView.loadUrl("file:///android_asset/www/index.html");
@@ -139,6 +141,18 @@ public class MainActivity extends Activity {
                 @Override
                 public void onLeaderboardError(String message) {
                     notifyLeaderboardError(message);
+                }
+            });
+
+            accountManager = new FirebaseAccountManager(this, new FirebaseAccountManager.Listener() {
+                @Override
+                public void onAccountState(String json) {
+                    notifyAccountState(json);
+                }
+
+                @Override
+                public void onAccountError(String code) {
+                    notifyAccountError(code);
                 }
             });
 
@@ -460,6 +474,23 @@ public class MainActivity extends Activity {
         ));
     }
 
+    private void notifyAccountState(final String json) {
+        if (webView == null) return;
+        webView.post(() -> webView.evaluateJavascript(
+                "window.onAccountState && window.onAccountState(" + JSONObject.quote(json) + ");",
+                null
+        ));
+    }
+
+    private void notifyAccountError(final String code) {
+        if (webView == null) return;
+        final String safeCode = (code == null || code.isEmpty()) ? "SIGNUP_FAILED" : code;
+        webView.post(() -> webView.evaluateJavascript(
+                "window.onAccountError && window.onAccountError(" + JSONObject.quote(safeCode) + ");",
+                null
+        ));
+    }
+
     /**
      * Tính toán kích thước Adaptive Banner phù hợp với độ rộng màn hình
      */
@@ -524,17 +555,9 @@ public class MainActivity extends Activity {
         public void getLeaderboard() {
             Log.d(TAG, "Gọi getLeaderboard() từ JavaScript");
             if (leaderboardManager != null) {
-                leaderboardManager.startUpdates();
+                leaderboardManager.fetchTop();
             } else {
                 notifyLeaderboardError("Bảng xếp hạng chưa sẵn sàng.");
-            }
-        }
-
-        @JavascriptInterface
-        public void stopLeaderboardUpdates() {
-            Log.d(TAG, "Gọi stopLeaderboardUpdates() từ JavaScript");
-            if (leaderboardManager != null) {
-                leaderboardManager.stopUpdates();
             }
         }
 
@@ -543,6 +566,41 @@ public class MainActivity extends Activity {
             Log.d(TAG, "Gọi submitLeaderboardScore() từ JavaScript");
             if (leaderboardManager != null) {
                 leaderboardManager.submitScore(json);
+            }
+        }
+
+        @JavascriptInterface
+        public boolean isAccountAvailable() {
+            return accountManager != null && accountManager.isAvailable();
+        }
+
+        @JavascriptInterface
+        public void checkAccount() {
+            Log.d(TAG, "Gọi checkAccount() từ JavaScript");
+            if (accountManager != null) {
+                accountManager.checkAccount();
+            } else {
+                notifyAccountError("UNAVAILABLE");
+            }
+        }
+
+        @JavascriptInterface
+        public void signUp(String username, String password) {
+            Log.d(TAG, "Gọi signUp() từ JavaScript");
+            if (accountManager != null) {
+                accountManager.signUp(username, password);
+            } else {
+                notifyAccountError("UNAVAILABLE");
+            }
+        }
+
+        @JavascriptInterface
+        public void login(String username, String password) {
+            Log.d(TAG, "Gọi login() từ JavaScript");
+            if (accountManager != null) {
+                accountManager.login(username, password);
+            } else {
+                notifyAccountError("UNAVAILABLE");
             }
         }
 

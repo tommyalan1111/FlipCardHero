@@ -5,17 +5,21 @@
 
 // ========================================================
 // CẤU HÌNH HỆ THỐNG TIM
-// - Tối đa 10 tim
+// - Tối đa 6 tim
 // - Tự hồi 1 tim mỗi 30 phút (kể cả offline nhờ localStorage)
 // ========================================================
 const HEART_CONFIG = {
-    max: 10,
+    max: 6,
     refillMs: 30 * 60 * 1000,
     storageKey: 'flipCardHero_hearts',
     lastRefillKey: 'flipCardHero_heartsLastRefill'
 };
 
 const BASE_SWEET_SPOT_WIDTH = 5;
+
+// Leaderboard chỉ lấy dữ liệu mới mỗi 1 giờ
+const LEADERBOARD_CACHE_KEY = 'flipCardHero_leaderboardCache';
+const LEADERBOARD_CACHE_TTL_MS = 60 * 60 * 1000;
 
 // ========================================================
 // CẤU HÌNH 3 BOSS
@@ -224,6 +228,9 @@ class FlipCardGame {
         this.playerName = (localStorage.getItem('flipCardHero_playerName') || 'LEO').toUpperCase();
         this.playerStats = this.loadPlayerStats();
         this.leaderboardData = null;
+        this.accountSignedIn = false;
+        this.signupBusy = false;
+        this.loginBusy = false;
         this.playerCards = 10;
         this.botCards = 10;
         this.currentRound = 1;
@@ -328,6 +335,8 @@ class FlipCardGame {
             // Screens
             screenSplash: document.getElementById('screen-splash'),
             screenPickName: document.getElementById('screen-pick-name'),
+            screenSignup: document.getElementById('screen-signup'),
+            screenLogin: document.getElementById('screen-login'),
             screenMainMenu: document.getElementById('screen-main-menu'),
             screenGame: document.getElementById('screen-game'),
 
@@ -336,6 +345,19 @@ class FlipCardGame {
             charCounter: document.getElementById('char-counter'),
             nameValidationMsg: document.getElementById('name-validation-msg'),
             btnConfirmName: document.getElementById('btn-confirm-name'),
+            signupUsername: document.getElementById('signup-username'),
+            signupPassword: document.getElementById('signup-password'),
+            signupRetype: document.getElementById('signup-retype'),
+            signupError: document.getElementById('signup-error'),
+            btnSignup: document.getElementById('btn-signup'),
+            btnSignupText: document.getElementById('btn-signup-text'),
+            loginUsername: document.getElementById('login-username'),
+            loginPassword: document.getElementById('login-password'),
+            loginError: document.getElementById('login-error'),
+            btnLogin: document.getElementById('btn-login'),
+            btnLoginText: document.getElementById('btn-login-text'),
+            btnGoLogin: document.getElementById('btn-go-login'),
+            btnGoSignup: document.getElementById('btn-go-signup'),
             menuPlayerNameTag: document.getElementById('menu-player-name-tag'),
             btnEditName: document.getElementById('btn-edit-name'),
             gamePlayerHudName: document.getElementById('game-player-hud-name'),
@@ -399,6 +421,7 @@ class FlipCardGame {
             modalLeaderboard: document.getElementById('modal-leaderboard'),
             leaderboardMyScore: document.getElementById('leaderboard-my-score'),
             leaderboardList: document.getElementById('leaderboard-list'),
+            leaderboardUpdated: document.getElementById('leaderboard-updated'),
             btnCloseLeaderboard: document.getElementById('btn-close-leaderboard'),
             btnRefreshLeaderboard: document.getElementById('btn-refresh-leaderboard'),
 
@@ -498,6 +521,77 @@ class FlipCardGame {
             this.confirmPlayerName();
         });
 
+
+        // Sign up
+        const handleSignupUsername = () => {
+            const input = this.dom.signupUsername;
+            const sanitized = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
+            if (input.value !== sanitized) {
+                input.value = sanitized;
+            }
+            this.setSignupError('');
+        };
+
+        this.dom.signupUsername.addEventListener('input', handleSignupUsername);
+        this.dom.signupPassword.addEventListener('input', () => this.setSignupError(''));
+        this.dom.signupRetype.addEventListener('input', () => this.setSignupError(''));
+
+        const submitSignupFromKeyboard = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.submitSignup();
+            }
+        };
+        this.dom.signupPassword.addEventListener('keydown', submitSignupFromKeyboard);
+        this.dom.signupRetype.addEventListener('keydown', submitSignupFromKeyboard);
+
+        this.dom.btnSignup.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.submitSignup();
+        });
+
+        // Log in
+        const handleLoginUsername = () => {
+            const input = this.dom.loginUsername;
+            const sanitized = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
+            if (input.value !== sanitized) {
+                input.value = sanitized;
+            }
+            this.setLoginError('');
+        };
+
+        this.dom.loginUsername.addEventListener('input', handleLoginUsername);
+        this.dom.loginPassword.addEventListener('input', () => this.setLoginError(''));
+
+        this.dom.loginPassword.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.submitLogin();
+            }
+        });
+
+        this.dom.btnLogin.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.submitLogin();
+        });
+
+        this.dom.btnGoLogin.addEventListener('click', () => {
+            window.soundManager.playClick();
+            const suggested = this.dom.signupUsername.value
+                || localStorage.getItem('flipCardHero_playerName')
+                || '';
+            this.dom.loginUsername.value = String(suggested).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
+            this.setLoginError('');
+            this.switchScreen('login');
+        });
+
+        this.dom.btnGoSignup.addEventListener('click', () => {
+            window.soundManager.playClick();
+            this.dom.signupUsername.value = this.dom.loginUsername.value || this.dom.signupUsername.value;
+            this.setSignupError('');
+            this.switchScreen('signup');
+        });
+
         // Nút đổi tên ở Main Menu
         this.dom.btnEditName.addEventListener('click', () => {
             window.soundManager.playClick();
@@ -566,7 +660,7 @@ class FlipCardGame {
 
         this.dom.btnRefreshLeaderboard.addEventListener('click', () => {
             window.soundManager.playClick();
-            this.fetchLeaderboard();
+            this.refreshLeaderboard();
         });
 
         this.dom.btnMenuSettings.addEventListener('click', () => {
@@ -995,7 +1089,6 @@ class FlipCardGame {
 
     openLeaderboard() {
         this.updateLeaderboardPreview(null);
-        this.renderLeaderboardState(this.t('leaderboard.loading'), false);
         this.showModal(this.dom.modalLeaderboard);
 
         // Cập nhật tên / điểm mới nhất trước khi tải bảng
@@ -1003,44 +1096,123 @@ class FlipCardGame {
             this.submitCurrentScore();
         }
 
+        const cache = this.loadLeaderboardCache();
+        if (cache && (Date.now() - cache.fetchedAt) < LEADERBOARD_CACHE_TTL_MS) {
+            this.leaderboardData = cache.data;
+            this.renderLeaderboard(cache.data);
+            this.showLeaderboardUpdatedAt(cache.fetchedAt);
+            return;
+        }
+
+        this.fetchLeaderboard();
+    }
+
+    refreshLeaderboard() {
+        const cache = this.loadLeaderboardCache();
+        if (cache && (Date.now() - cache.fetchedAt) < LEADERBOARD_CACHE_TTL_MS) {
+            const remaining = LEADERBOARD_CACHE_TTL_MS - (Date.now() - cache.fetchedAt);
+            this.setLeaderboardNote(this.t('leaderboard.cooldown', {
+                time: this.formatLeaderboardRemaining(remaining)
+            }));
+            return;
+        }
+
         this.fetchLeaderboard();
     }
 
     fetchLeaderboard() {
         this.renderLeaderboardState(this.t('leaderboard.loading'), false);
+        this.setLeaderboardNote('');
+
+        const cached = this.loadLeaderboardCache();
 
         if (!window.leaderboardManager || !window.leaderboardManager.isAvailable()) {
-            this.renderLeaderboardState(
-                this.t('leaderboard.unavailable'),
-                true
-            );
+            if (cached) {
+                this.leaderboardData = cached.data;
+                this.renderLeaderboard(cached.data);
+                this.setLeaderboardNote(this.t('leaderboard.cachedError'));
+            } else {
+                this.renderLeaderboardState(this.t('leaderboard.unavailable'), true);
+            }
             return;
         }
 
         window.leaderboardManager.setHandlers({
             onData: (data) => {
                 this.leaderboardData = data;
+                this.saveLeaderboardCache(data);
                 this.renderLeaderboard(data);
+                this.showLeaderboardUpdatedAt(Date.now());
             },
             onError: (message) => {
-                if (message === 'unavailable') {
-                    this.renderLeaderboardState(
-                        this.t('leaderboard.unavailable'),
-                        true
-                    );
-                } else if (message === 'timeout') {
-                    this.renderLeaderboardState(this.t('leaderboard.timeout'), true);
+                if (cached) {
+                    this.leaderboardData = cached.data;
+                    this.renderLeaderboard(cached.data);
+                    this.setLeaderboardNote(this.t('leaderboard.cachedError'));
                 } else {
-                    this.renderLeaderboardState(
-                        this.t('leaderboard.error'),
-                        true
-                    );
+                    let text = this.t('leaderboard.error');
+                    if (message === 'unavailable') text = this.t('leaderboard.unavailable');
+                    else if (message === 'timeout') text = this.t('leaderboard.timeout');
+                    else if (message === 'PERMISSION_DENIED') text = this.t('leaderboard.errorPermission');
+                    else if (message === 'NETWORK') text = this.t('leaderboard.errorNetwork');
+                    else if (message === 'AUTH_FAILED') text = this.t('leaderboard.errorAuth');
+                    else if (message === 'INDEX_MISSING') text = this.t('leaderboard.errorIndex');
+                    this.renderLeaderboardState(text, true);
+                    this.setLeaderboardNote('');
                 }
-                this.updateLeaderboardPreview(null);
+                this.updateLeaderboardPreview(0);
             }
         });
 
-        window.leaderboardManager.startUpdates();
+        window.leaderboardManager.fetchTop();
+    }
+
+    loadLeaderboardCache() {
+        try {
+            const raw = localStorage.getItem(LEADERBOARD_CACHE_KEY);
+            if (!raw) return null;
+
+            const cache = JSON.parse(raw);
+            if (!cache || !cache.data || typeof cache.fetchedAt !== 'number') {
+                return null;
+            }
+            return cache;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    saveLeaderboardCache(data) {
+        try {
+            localStorage.setItem(LEADERBOARD_CACHE_KEY, JSON.stringify({
+                fetchedAt: Date.now(),
+                data
+            }));
+        } catch (e) {
+            // Bỏ qua nếu localStorage bị chặn
+        }
+    }
+
+    showLeaderboardUpdatedAt(timestamp) {
+        const locale = window.i18n && window.i18n.lang === 'en' ? 'en-US' : 'vi-VN';
+        const time = new Date(timestamp).toLocaleTimeString(locale, {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        this.setLeaderboardNote(this.t('leaderboard.updatedAt', { time }));
+    }
+
+    setLeaderboardNote(text) {
+        if (this.dom.leaderboardUpdated) {
+            this.dom.leaderboardUpdated.textContent = text;
+        }
+    }
+
+    formatLeaderboardRemaining(ms) {
+        const total = Math.max(0, Math.ceil(ms / 1000));
+        const minutes = Math.floor(total / 60);
+        const seconds = total % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
     updateLeaderboardPreview(rank) {
@@ -1178,38 +1350,256 @@ class FlipCardGame {
     startSplashScreen() {
         this.switchScreen('splash');
 
-        // Chuyển sang màn hình chọn tên hoặc menu chính sau 1.6 giây
         setTimeout(() => {
             if (this.currentScreen === 'splash') {
-                const saved = localStorage.getItem('flipCardHero_playerName');
-                if (saved && saved.length >= 3 && saved.length <= 9) {
-                    this.playerName = saved.toUpperCase();
-                    this.updatePlayerNameDisplays();
-                    this.switchScreen('main-menu');
-                } else {
-                    this.switchScreen('pick-name');
-                }
+                this.finishSplash();
             }
         }, 1700);
 
         this.dom.screenSplash.addEventListener('click', () => {
             if (this.currentScreen === 'splash') {
-                const saved = localStorage.getItem('flipCardHero_playerName');
-                if (saved && saved.length >= 3 && saved.length <= 9) {
-                    this.playerName = saved.toUpperCase();
-                    this.updatePlayerNameDisplays();
-                    this.switchScreen('main-menu');
-                } else {
-                    this.switchScreen('pick-name');
-                }
+                this.finishSplash();
             }
         }, { once: true });
+    }
+
+    async finishSplash() {
+        if (this.currentScreen !== 'splash') return;
+
+        if (window.accountManager && window.accountManager.hasBridge() && window.accountManager.isAvailable()) {
+            try {
+                const state = await window.accountManager.checkAccount();
+                if (this.currentScreen !== 'splash') return;
+
+                if (state && state.status === 'signed_in' && state.username) {
+                    this.applySignedInAccount(state.username);
+                    return;
+                }
+
+                if (state && state.status === 'signup_required') {
+                    const saved = localStorage.getItem('flipCardHero_playerName') || '';
+                    const username = saved.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
+                    if (username.length >= 3) {
+                        this.dom.signupUsername.value = username;
+                    }
+                    this.switchScreen('signup');
+                    return;
+                }
+            } catch (e) {
+                // Firebase chưa sẵn sàng -> dùng luồng local cũ
+            }
+        }
+
+        this.startLocalFlow();
+    }
+
+    startLocalFlow() {
+        this.accountSignedIn = false;
+        this.signupBusy = false;
+        this.loginBusy = false;
+        if (this.dom.btnEditName) {
+            this.dom.btnEditName.classList.remove('hidden');
+        }
+
+        const saved = localStorage.getItem('flipCardHero_playerName');
+        if (saved && saved.length >= 3 && saved.length <= 9) {
+            this.playerName = saved.toUpperCase();
+            this.updatePlayerNameDisplays();
+            this.switchScreen('main-menu');
+        } else {
+            this.switchScreen('pick-name');
+        }
+    }
+
+    applySignedInAccount(username) {
+        this.accountSignedIn = true;
+        const normalized = String(username || '')
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, '')
+            .slice(0, 9);
+
+        if (normalized.length >= 3) {
+            this.playerName = normalized;
+            try {
+                localStorage.setItem('flipCardHero_playerName', this.playerName);
+            } catch (e) {
+                // Bỏ qua nếu localStorage bị chặn
+            }
+        }
+
+        this.updatePlayerNameDisplays();
+        if (this.dom.btnEditName) {
+            this.dom.btnEditName.classList.add('hidden');
+        }
+        this.switchScreen('main-menu');
+    }
+
+    setSignupError(message) {
+        if (!this.dom.signupError) return;
+        this.dom.signupError.textContent = message || '';
+        this.dom.signupError.className = message ? 'validation-msg error' : 'validation-msg';
+    }
+
+    setSignupLoading(loading) {
+        if (!this.dom.btnSignup) return;
+        this.dom.btnSignup.disabled = loading;
+        if (this.dom.btnSignupText) {
+            this.dom.btnSignupText.textContent = loading
+                ? this.t('signup.creating')
+                : this.t('signup.submit');
+        }
+    }
+
+    mapSignupError(code) {
+        switch (code) {
+            case 'USERNAME_TAKEN':
+                return this.t('signup.errorTaken');
+            case 'INVALID_USERNAME':
+                return this.t('signup.errorUsername');
+            case 'WEAK_PASSWORD':
+                return this.t('signup.errorPassword');
+            case 'NETWORK':
+                return this.t('signup.errorNetwork');
+            case 'PERMISSION_DENIED':
+                return this.t('signup.errorPermission');
+            case 'AUTH_DISABLED':
+                return this.t('signup.errorAuthDisabled');
+            case 'UNAVAILABLE':
+                return this.t('signup.errorUnavailable');
+            case 'AUTH_NOT_READY':
+            case 'TIMEOUT':
+                return this.t('signup.errorAuth');
+            default:
+                return this.t('signup.errorGeneric');
+        }
+    }
+
+    async submitSignup() {
+        if (this.signupBusy) return;
+
+        const username = this.dom.signupUsername.value.trim().toUpperCase();
+        const password = this.dom.signupPassword.value;
+        const retype = this.dom.signupRetype.value;
+
+        if (!/^[A-Z0-9]{3,9}$/.test(username)) {
+            this.setSignupError(this.t('signup.errorUsername'));
+            return;
+        }
+        if (password.length < 6) {
+            this.setSignupError(this.t('signup.errorPassword'));
+            return;
+        }
+        if (password !== retype) {
+            this.setSignupError(this.t('signup.errorRetype'));
+            return;
+        }
+        if (!window.accountManager || !window.accountManager.hasBridge()) {
+            this.setSignupError(this.t('signup.errorUnavailable'));
+            return;
+        }
+
+        this.signupBusy = true;
+        this.setSignupError('');
+        this.setSignupLoading(true);
+
+        try {
+            const result = await window.accountManager.signUp(username, password);
+            if (result && result.status === 'signed_in') {
+                this.applySignedInAccount(result.username || username);
+            } else {
+                this.setSignupError(this.t('signup.errorGeneric'));
+            }
+        } catch (e) {
+            this.setSignupError(this.mapSignupError(e && e.message ? e.message : ''));
+        }
+
+        this.signupBusy = false;
+        this.setSignupLoading(false);
+    }
+
+
+    setLoginError(message) {
+        if (!this.dom.loginError) return;
+        this.dom.loginError.textContent = message || '';
+        this.dom.loginError.className = message ? 'validation-msg error' : 'validation-msg';
+    }
+
+    setLoginLoading(loading) {
+        if (!this.dom.btnLogin) return;
+        this.dom.btnLogin.disabled = loading;
+        if (this.dom.btnLoginText) {
+            this.dom.btnLoginText.textContent = loading
+                ? this.t('login.loading')
+                : this.t('login.submit');
+        }
+    }
+
+    mapLoginError(code) {
+        switch (code) {
+            case 'INVALID_LOGIN':
+                return this.t('login.errorInvalid');
+            case 'INVALID_USERNAME':
+                return this.t('login.errorUsername');
+            case 'INVALID_CREDENTIALS':
+                return this.t('login.errorInvalid');
+            case 'NETWORK':
+                return this.t('login.errorNetwork');
+            case 'AUTH_DISABLED':
+                return this.t('login.errorAuthDisabled');
+            case 'UNAVAILABLE':
+                return this.t('login.errorUnavailable');
+            case 'AUTH_NOT_READY':
+            case 'TIMEOUT':
+                return this.t('login.errorAuth');
+            default:
+                return this.t('login.errorGeneric');
+        }
+    }
+
+    async submitLogin() {
+        if (this.loginBusy) return;
+
+        const username = this.dom.loginUsername.value.trim().toUpperCase();
+        const password = this.dom.loginPassword.value;
+
+        if (!/^[A-Z0-9]{3,9}$/.test(username)) {
+            this.setLoginError(this.t('login.errorUsername'));
+            return;
+        }
+        if (!password) {
+            this.setLoginError(this.t('login.errorPassword'));
+            return;
+        }
+        if (!window.accountManager || typeof window.accountManager.login !== 'function') {
+            this.setLoginError(this.t('login.errorUnavailable'));
+            return;
+        }
+
+        this.loginBusy = true;
+        this.setLoginError('');
+        this.setLoginLoading(true);
+
+        try {
+            const result = await window.accountManager.login(username, password);
+            if (result && result.status === 'signed_in') {
+                this.applySignedInAccount(result.username || username);
+            } else {
+                this.setLoginError(this.t('login.errorGeneric'));
+            }
+        } catch (e) {
+            this.setLoginError(this.mapLoginError(e && e.message ? e.message : ''));
+        }
+
+        this.loginBusy = false;
+        this.setLoginLoading(false);
     }
 
     switchScreen(screenName) {
         this.currentScreen = screenName;
         const screens = [
             this.dom.screenSplash,
+            this.dom.screenSignup,
+            this.dom.screenLogin,
             this.dom.screenPickName,
             this.dom.screenMainMenu,
             this.dom.screenGame
@@ -1223,6 +1613,8 @@ class FlipCardGame {
 
         let target = null;
         if (screenName === 'splash') target = this.dom.screenSplash;
+        else if (screenName === 'signup') target = this.dom.screenSignup;
+        else if (screenName === 'login') target = this.dom.screenLogin;
         else if (screenName === 'pick-name') target = this.dom.screenPickName;
         else if (screenName === 'main-menu') target = this.dom.screenMainMenu;
         else if (screenName === 'game') target = this.dom.screenGame;
@@ -2139,9 +2531,6 @@ class FlipCardGame {
     }
 
     hideModals() {
-        if (window.leaderboardManager) {
-            window.leaderboardManager.stopUpdates();
-        }
         this.dom.modalOverlay.classList.add('hidden');
         [
             this.dom.modalRps,

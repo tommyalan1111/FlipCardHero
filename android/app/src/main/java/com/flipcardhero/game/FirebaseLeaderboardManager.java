@@ -10,7 +10,7 @@ import com.google.firebase.firestore.AggregateSource;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
@@ -54,10 +54,10 @@ public class FirebaseLeaderboardManager {
     private boolean authReady = false;
     private boolean authFailed = false;
     private boolean authInProgress = false;
-    private boolean pendingLiveUpdates = false;
+    private boolean pendingFetch = false;
+    private boolean fetchInProgress = false;
     private String pendingScoreJson = null;
 
-    private ListenerRegistration leaderboardRegistration;
     private long snapshotVersion = 0;
 
     public FirebaseLeaderboardManager(Context context, Listener listener) {
@@ -123,8 +123,8 @@ public class FirebaseLeaderboardManager {
                             : "Không thể đăng nhập ẩn danh";
                     Log.e(TAG, "Đăng nhập Anonymous thất bại: " + message);
 
-                    if (pendingLiveUpdates) {
-                        pendingLiveUpdates = false;
+                    if (pendingFetch) {
+                        pendingFetch = false;
                         listener.onLeaderboardError("Không thể kết nối bảng xếp hạng: " + message);
                     }
                 }
@@ -133,8 +133,8 @@ public class FirebaseLeaderboardManager {
             authInProgress = false;
             authFailed = true;
             Log.e(TAG, "Lỗi đăng nhập Anonymous", t);
-            if (pendingLiveUpdates) {
-                pendingLiveUpdates = false;
+            if (pendingFetch) {
+                pendingFetch = false;
                 listener.onLeaderboardError("Không thể kết nối bảng xếp hạng.");
             }
         }
@@ -143,56 +143,56 @@ public class FirebaseLeaderboardManager {
     /**
      * Bắt đầu lắng nghe top 50 realtime.
      */
-    public void startUpdates() {
+    /**
+     * Lấy top 50 một lần duy nhất. Không dùng snapshot listener,
+     * để tránh phát sinh lượt đọc Firestore liên tục.
+     */
+    public void fetchTop() {
         if (!available) {
-            listener.onLeaderboardError("Bảng xếp hạng chưa sẵn sàng. Hãy thêm google-services.json và build lại app.");
+            listener.onLeaderboardError("UNAVAILABLE");
             return;
         }
         if (authFailed) {
-            listener.onLeaderboardError("Không thể đăng nhập bảng xếp hạng. Kiểm tra Anonymous Auth trong Firebase.");
+            listener.onLeaderboardError("AUTH_FAILED");
             return;
         }
         if (!authReady) {
-            pendingLiveUpdates = true;
+            pendingFetch = true;
             ensureSignedIn();
             return;
         }
-
-        stopUpdates();
+        if (fetchInProgress) {
+            return;
+        }
 
         FirebaseFirestore db = firestore;
         if (db == null) {
-            listener.onLeaderboardError("Firestore chưa sẵn sàng.");
+            listener.onLeaderboardError("UNAVAILABLE");
             return;
         }
 
         try {
+            fetchInProgress = true;
             Query query = db.collection(COLLECTION)
                     .orderBy("score", Query.Direction.DESCENDING)
                     .limit(TOP_LIMIT);
 
-            leaderboardRegistration = query.addSnapshotListener((snapshot, error) -> {
-                if (error != null) {
-                    Log.e(TAG, "Lỗi listener leaderboard", error);
-                    listener.onLeaderboardError("Không thể tải bảng xếp hạng: " + error.getMessage());
-                    return;
-                }
-                if (snapshot == null) {
-                    return;
-                }
-                sendSnapshot(snapshot);
-            });
+            query.get()
+                    .addOnSuccessListener(snapshot -> {
+                        fetchInProgress = false;
+                        if (snapshot != null) {
+                            sendSnapshot(snapshot);
+                        }
+                    })
+                    .addOnFailureListener(error -> {
+                        fetchInProgress = false;
+                        Log.e(TAG, "Lỗi tải leaderboard", error);
+                        listener.onLeaderboardError(mapLeaderboardError(error));
+                    });
         } catch (Throwable t) {
-            Log.e(TAG, "Lỗi gọi startUpdates", t);
-            listener.onLeaderboardError("Không thể tải bảng xếp hạng.");
-        }
-    }
-
-    public void stopUpdates() {
-        pendingLiveUpdates = false;
-        if (leaderboardRegistration != null) {
-            leaderboardRegistration.remove();
-            leaderboardRegistration = null;
+            fetchInProgress = false;
+            Log.e(TAG, "Lỗi gọi fetchTop", t);
+            listener.onLeaderboardError("LOAD_FAILED");
         }
     }
 
@@ -364,20 +364,36 @@ public class FirebaseLeaderboardManager {
             listener.onLeaderboardData(result.toString());
         } catch (Throwable t) {
             Log.e(TAG, "Lỗi tạo JSON leaderboard", t);
-            listener.onLeaderboardError("Không thể đọc bảng xếp hạng.");
+            listener.onLeaderboardError("LOAD_FAILED");
         }
     }
 
     private void flushPending() {
-        if (pendingLiveUpdates) {
-            pendingLiveUpdates = false;
-            startUpdates();
+        if (pendingFetch) {
+            pendingFetch = false;
+            fetchTop();
         }
         if (pendingScoreJson != null) {
             String json = pendingScoreJson;
             pendingScoreJson = null;
             writeScore(json);
         }
+    }
+
+    private String mapLeaderboardError(Exception exception) {
+        if (exception instanceof FirebaseFirestoreException) {
+            FirebaseFirestoreException firestoreError = (FirebaseFirestoreException) exception;
+            if (firestoreError.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                return "PERMISSION_DENIED";
+            }
+            if (firestoreError.getCode() == FirebaseFirestoreException.Code.UNAVAILABLE) {
+                return "NETWORK";
+            }
+            if (firestoreError.getCode() == FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
+                return "INDEX_MISSING";
+            }
+        }
+        return "LOAD_FAILED";
     }
 
     private String safeString(String value, String fallback) {

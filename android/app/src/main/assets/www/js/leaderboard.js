@@ -1,7 +1,7 @@
 /**
  * Flip Card Hero - Leaderboard Bridge (Firebase native Android)
- * - Nhận top 50 realtime từ Android LeaderboardManager.
- * - Android gọi lại qua window.onLeaderboardData / window.onLeaderboardError.
+ * - Chỉ lấy top 50 MỘT LẦN khi được yêu cầu (không realtime).
+ * - Game tự cache kết quả 1 giờ trước khi gọi lại.
  */
 (function () {
     class LeaderboardManager {
@@ -9,6 +9,7 @@
             this.dataHandler = null;
             this.errorHandler = null;
             this.loadTimer = null;
+            this.loading = false;
 
             window.onLeaderboardData = (json) => this.handleData(json);
             window.onLeaderboardError = (message) => this.handleError(message);
@@ -45,11 +46,12 @@
         }
 
         /**
-         * Mở listener realtime top 50.
+         * Gọi native lấy top 50 một lần.
          */
-        startUpdates() {
-            this.clearLoadTimer();
-
+        fetchTop() {
+            if (this.loading) {
+                return false;
+            }
             if (!this.hasBridge()) {
                 this.emitError('unavailable');
                 return false;
@@ -59,8 +61,10 @@
                 return false;
             }
 
-            // Chỉ dùng timeout cho lần tải đầu tiên
+            this.loading = true;
+            this.clearLoadTimer();
             this.loadTimer = setTimeout(() => {
+                this.loading = false;
                 this.emitError('timeout');
             }, 15000);
 
@@ -68,27 +72,13 @@
                 this.getBridge().getLeaderboard();
                 return true;
             } catch (e) {
+                this.loading = false;
+                this.clearLoadTimer();
                 this.emitError(e && e.message ? e.message : 'error');
                 return false;
             }
         }
 
-        stopUpdates() {
-            this.clearLoadTimer();
-
-            const bridge = this.getBridge();
-            if (bridge && typeof bridge.stopLeaderboardUpdates === 'function') {
-                try {
-                    bridge.stopLeaderboardUpdates();
-                } catch (e) {
-                    // Bỏ qua
-                }
-            }
-        }
-
-        /**
-         * Gửi điểm lên Firestore. Không cần chờ kết quả.
-         */
         submitScore(payload) {
             if (!this.hasBridge() || !this.isAvailable()) {
                 return false;
@@ -103,6 +93,7 @@
         }
 
         handleData(json) {
+            this.loading = false;
             this.clearLoadTimer();
 
             try {
@@ -116,6 +107,7 @@
         }
 
         handleError(message) {
+            this.loading = false;
             this.clearLoadTimer();
             this.emitError(message || 'error');
         }

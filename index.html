@@ -79,6 +79,139 @@
             </div>
         </div>
 
+
+        <!-- ==============================================
+             1.6. MÀN HÌNH ĐĂNG KÝ (SIGN UP)
+             ============================================== -->
+        <div id="screen-signup" class="app-screen hidden">
+            <div class="pick-name-container signup-container">
+                <div class="pick-hero-preview">
+                    <div class="pick-avatar-circle">
+                        <img src="icons/hero-player.svg" alt="Hero Avatar">
+                    </div>
+                    <div class="pick-badge" data-i18n="signup.badge">⭐ TẠO TÀI KHOẢN ⭐</div>
+                </div>
+
+                <div class="pick-name-header">
+                    <h2 class="pick-title" data-i18n="signup.title">TẠO TÀI KHOẢN</h2>
+                    <p class="pick-subtitle" data-i18n="signup.subtitle">Tên đăng nhập dùng để xếp hạng và không thể trùng.</p>
+                </div>
+
+                <div class="signup-form">
+                    <div class="signup-field">
+                        <label for="signup-username" class="input-lbl" data-i18n="signup.usernameLabel">Tên đăng nhập (3 - 9 ký tự):</label>
+                        <input
+                            type="text"
+                            id="signup-username"
+                            class="custom-name-input"
+                            placeholder="Nhập username..."
+                            data-i18n-placeholder="signup.usernamePlaceholder"
+                            maxlength="9"
+                            autocomplete="username"
+                            autocorrect="off"
+                            autocapitalize="characters"
+                            spellcheck="false"
+                        >
+                    </div>
+
+                    <div class="signup-field">
+                        <label for="signup-password" class="input-lbl" data-i18n="signup.passwordLabel">Mật khẩu (tối thiểu 6 ký tự):</label>
+                        <input
+                            type="password"
+                            id="signup-password"
+                            class="custom-name-input"
+                            placeholder="Nhập mật khẩu..."
+                            data-i18n-placeholder="signup.passwordPlaceholder"
+                            autocomplete="new-password"
+                        >
+                    </div>
+
+                    <div class="signup-field">
+                        <label for="signup-retype" class="input-lbl" data-i18n="signup.retypeLabel">Nhập lại mật khẩu:</label>
+                        <input
+                            type="password"
+                            id="signup-retype"
+                            class="custom-name-input"
+                            placeholder="Nhập lại mật khẩu..."
+                            data-i18n-placeholder="signup.retypePlaceholder"
+                            autocomplete="new-password"
+                        >
+                    </div>
+
+                    <div id="signup-error" class="validation-msg"></div>
+                </div>
+
+                <button id="btn-signup" class="btn-menu-action btn-play" style="width: 100%;">
+                    <span id="btn-signup-text" class="btn-text" data-i18n="signup.submit">TẠO TÀI KHOẢN</span>
+                    <span class="btn-icon">➔</span>
+                </button>
+
+                <button id="btn-go-login" type="button" class="auth-switch-link" data-i18n="signup.haveAccount">
+                    Đã có tài khoản? Đăng nhập
+                </button>
+            </div>
+        </div>
+
+        <!-- ==============================================
+             1.7. MÀN HÌNH ĐĂNG NHẬP (LOG IN)
+             ============================================== -->
+        <div id="screen-login" class="app-screen hidden">
+            <div class="pick-name-container signup-container">
+                <div class="pick-hero-preview">
+                    <div class="pick-avatar-circle">
+                        <img src="icons/hero-player.svg" alt="Hero Avatar">
+                    </div>
+                    <div class="pick-badge" data-i18n="login.badge">⭐ ĐĂNG NHẬP ⭐</div>
+                </div>
+
+                <div class="pick-name-header">
+                    <h2 class="pick-title" data-i18n="login.title">ĐĂNG NHẬP</h2>
+                    <p class="pick-subtitle" data-i18n="login.subtitle">Đăng nhập để tiếp tục với tài khoản của bạn.</p>
+                </div>
+
+                <div class="signup-form">
+                    <div class="signup-field">
+                        <label for="login-username" class="input-lbl" data-i18n="login.usernameLabel">Tên đăng nhập:</label>
+                        <input
+                            type="text"
+                            id="login-username"
+                            class="custom-name-input"
+                            placeholder="Nhập username..."
+                            data-i18n-placeholder="login.usernamePlaceholder"
+                            maxlength="9"
+                            autocomplete="username"
+                            autocorrect="off"
+                            autocapitalize="characters"
+                            spellcheck="false"
+                        >
+                    </div>
+
+                    <div class="signup-field">
+                        <label for="login-password" class="input-lbl" data-i18n="login.passwordLabel">Mật khẩu:</label>
+                        <input
+                            type="password"
+                            id="login-password"
+                            class="custom-name-input"
+                            placeholder="Nhập mật khẩu..."
+                            data-i18n-placeholder="login.passwordPlaceholder"
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <div id="login-error" class="validation-msg"></div>
+                </div>
+
+                <button id="btn-login" class="btn-menu-action btn-play" style="width: 100%;">
+                    <span id="btn-login-text" class="btn-text" data-i18n="login.submit">ĐĂNG NHẬP</span>
+                    <span class="btn-icon">➔</span>
+                </button>
+
+                <button id="btn-go-signup" type="button" class="auth-switch-link" data-i18n="login.noAccount">
+                    Chưa có tài khoản? Đăng ký
+                </button>
+            </div>
+        </div>
+
         <!-- ==============================================
              2. MÀN HÌNH CHÍNH (MAIN MENU SCREEN)
              ============================================== -->
@@ -88,7 +221,7 @@
                 <div class="game-badge-mini" data-i18n="menu.badge">⭐ HERO</div>
                 <div id="menu-heart-hud" class="heart-hud" title="Mỗi trận tốn 1 tim. Tim tự hồi 1 viên mỗi 30 phút." data-i18n-title="menu.heartTitle">
                     <span class="heart-hud-icon">❤️</span>
-                    <span class="heart-hud-count"><strong id="heart-count">10</strong><span class="heart-hud-max">/10</span></span>
+                    <span class="heart-hud-count"><strong id="heart-count">6</strong><span class="heart-hud-max">/6</span></span>
                     <span id="heart-timer" class="heart-hud-timer" data-i18n="common.full">ĐẦY</span>
                 </div>
                 <button id="btn-menu-settings" class="icon-round-btn" title="Cài đặt" data-i18n-title="menu.settingsTitle">⚙️</button>
@@ -164,7 +297,7 @@
                 <div class="game-header-right">
                     <div id="game-heart-hud" class="heart-hud compact" title="Tim còn lại" data-i18n-title="game.heartsTitle">
                         <span class="heart-hud-icon">❤️</span>
-                        <strong id="game-heart-count">10</strong>
+                        <strong id="game-heart-count">6</strong>
                     </div>
                     <button id="btn-sound-toggle" class="icon-round-btn-sm" title="Âm thanh" data-i18n-title="game.soundTitle">🔊</button>
                 </div>
@@ -354,7 +487,7 @@
                     <div class="rule-card">
                         <span class="rule-num">1</span>
                         <div class="rule-text" data-i18n-html="how.rule1">
-                            <strong>Tối đa 10 Tim:</strong> Mỗi trận tốn <strong>1 ❤️</strong>. Tim tự hồi <strong>1 ❤️ mỗi 30 phút</strong>, kể cả khi tắt game (tối đa 10 tim).
+                            <strong>Tối đa 6 Tim:</strong> Mỗi trận tốn <strong>1 ❤️</strong>. Tim tự hồi <strong>1 ❤️ mỗi 30 phút</strong>, kể cả khi tắt game (tối đa 6 tim).
                         </div>
                     </div>
                     <div class="rule-card">
@@ -473,7 +606,7 @@
 
                 <div class="wheel-heart-hud">
                     <span data-i18n="wheel.hearts">Tim hiện có:</span>
-                    <strong>❤️ <span id="wheel-heart-count">10</span>/10</strong>
+                    <strong>❤️ <span id="wheel-heart-count">6</span>/6</strong>
                 </div>
             </div>
 
@@ -515,6 +648,8 @@
                     <div class="leaderboard-state" data-i18n="leaderboard.loading">Đang tải bảng xếp hạng...</div>
                 </div>
 
+                <div id="leaderboard-updated" class="leaderboard-updated"></div>
+
                 <button id="btn-refresh-leaderboard" class="btn-action-primary" style="width: 100%; margin-top: 10px;">
                     <span data-i18n="leaderboard.refresh">🔄 LÀM MỚI</span>
                 </button>
@@ -530,6 +665,7 @@
     <script src="js/audio.js"></script>
     <script src="js/ads.js"></script>
     <script src="js/i18n.js"></script>
+    <script src="js/account.js"></script>
     <script src="js/leaderboard.js"></script>
     <script src="js/game.js"></script>
 </body>

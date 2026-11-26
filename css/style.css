@@ -377,6 +377,94 @@ html, body {
     color: #16a34a;
 }
 
+/* SIGN UP SCREEN */
+#screen-signup,
+#screen-login {
+    background: radial-gradient(circle at 50% 20%, #7dd3fc 0%, #38bdf8 30%, #0284c7 70%, #0369a1 100%);
+    justify-content: center;
+    align-items: center;
+    padding: 12px 20px;
+    z-index: 25;
+}
+
+.signup-container {
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.signup-container .pick-hero-preview {
+    margin-top: 0;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.signup-container .pick-avatar-circle {
+    width: 70px;
+    height: 70px;
+    border-width: 3px;
+}
+
+.signup-container .pick-badge {
+    position: static;
+    transform: none;
+    margin: 0;
+}
+
+.signup-container .pick-name-header {
+    margin-bottom: 12px;
+}
+
+.signup-container .pick-title {
+    font-size: 20px;
+}
+
+.signup-container .pick-subtitle {
+    font-size: 12px;
+}
+
+.signup-form {
+    width: 100%;
+    text-align: left;
+}
+
+.signup-field {
+    margin-bottom: 10px;
+}
+
+.signup-field .custom-name-input {
+    height: 46px;
+    padding: 0 14px;
+    font-size: 15px;
+}
+
+.signup-field input[type="password"] {
+    letter-spacing: 1px;
+}
+
+#signup-error,
+#login-error {
+    min-height: 20px;
+    margin-top: 0;
+}
+
+.auth-switch-link {
+    margin-top: 10px;
+    padding: 6px 8px;
+    background: none;
+    border: none;
+    color: #0369a1;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 850;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 /* NÚT ĐỔI TÊN Ở MENU CHÍNH */
 .hero-tag-wrapper {
     display: flex;
@@ -2433,6 +2521,15 @@ html, body {
 
 .leaderboard-state.error {
     color: #dc2626;
+}
+
+.leaderboard-updated {
+    min-height: 13px;
+    margin-top: 6px;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #94a3b8;
 }
 
 /* HOW TO PLAY MODAL */
